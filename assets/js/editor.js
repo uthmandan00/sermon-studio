@@ -13,7 +13,7 @@ const modeText = {
 };
 let currentOutput = "manuscript";
 const romanPointPattern = /^(I|II|III|IV|V|VI|VII|VIII|IX|X)\.\s+(.+)$/i;
-const scriptureReferencePattern = /\b(?:[1-3]\s*)?[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\s+\d+:\d+(?:[–-]\d+)?(?:\s*\([A-Z]{2,}\))?/g;
+const scriptureReferencePattern = /\b(?:[1-3]\s*)?[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\s+\d+:\d+(?:[\u2013-]\d+)?(?:\s*\([A-Z]{2,}\))?/g;
 
 function blankSermon() {
   const params = new URLSearchParams(window.location.search);
@@ -181,7 +181,7 @@ function renderOutline(blocks) {
 }
 
 function readOutline() {
-  return $$(".outline-block").map((block) => ({
+  return $$("#outline-list > .outline-block").map((block) => ({
     id: block.dataset.id,
     type: $(".outline-type", block).value,
     title: $(".outline-title", block).value.trim(),
@@ -208,7 +208,7 @@ function readScriptureBlocks() {
 }
 
 function cleanHeading(value = "") {
-  return value.replace(/[“”"]/g, "").trim();
+  return value.trim().replace(/^[\s"'\u2018\u2019\u201c\u201d?]+|[\s"'\u2018\u2019\u201c\u201d?]+$/g, "");
 }
 
 function splitParagraphs(text = "") {
@@ -261,7 +261,7 @@ function parseSermonManuscript(text = "") {
     .map((match) => match[1].trim())
     .filter(Boolean)
     .join("\n\n");
-  const scriptureBlocks = [...body.matchAll(/^((?:[1-3]\s*)?[A-Z][A-Za-z ]+\s+\d+:\d+(?:[–-]\d+)?\s*\([A-Z]{2,}\))\s+(.+)$/gm)]
+  const scriptureBlocks = [...body.matchAll(/^((?:[1-3]\s*)?[A-Z][A-Za-z ]+\s+\d+:\d+(?:[\u2013-]\d+)?\s*\([A-Z]{2,}\))\s+(.+)$/gm)]
     .map((match) => ({
       id: createId("scripture"),
       reference: match[1].trim(),
