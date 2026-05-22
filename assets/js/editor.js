@@ -12,6 +12,8 @@ const modeText = {
   outputs: ["Outputs", "Prepare manuscript, handout, and discussion-question views from this sermon."]
 };
 let currentOutput = "manuscript";
+const romanPointPattern = /^(I|II|III|IV|V|VI|VII|VIII|IX|X)\.\s+(.+)$/i;
+const scriptureReferencePattern = /\b(?:[1-3]\s*)?[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\s+\d+:\d+(?:[–-]\d+)?(?:\s*\([A-Z]{2,}\))?/g;
 
 function blankSermon() {
   const params = new URLSearchParams(window.location.search);
@@ -205,6 +207,108 @@ function readScriptureBlocks() {
   })).filter((block) => block.reference || block.text);
 }
 
+function cleanHeading(value = "") {
+  return value.replace(/[“”"]/g, "").trim();
+}
+
+function splitParagraphs(text = "") {
+  return text
+    .replace(/\r\n/g, "\n")
+    .split(/\n{2,}/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function parseSermonManuscript(text = "") {
+  const lines = text.replace(/\r\n/g, "\n").split("\n");
+  const nonEmpty = lines.map((line) => line.trim()).filter(Boolean);
+  if (nonEmpty.length < 3) throw new Error("Paste a title, scripture, and sermon body first.");
+
+  const title = cleanHeading(nonEmpty[0]);
+  const mainScripture = nonEmpty[1];
+  const bodyStart = lines.findIndex((line) => line.trim() === nonEmpty[2]);
+  const body = lines.slice(Math.max(0, bodyStart)).join("\n").trim();
+  const sectionMatches = [...body.matchAll(/^(INTRODUCTION|CONCLUSION|INVITATION)\s*$/gim)];
+  const pointMatches = [...body.matchAll(new RegExp(romanPointPattern.source, "gim"))];
+  const markers = [
+    ...sectionMatches.map((match) => ({ kind: match[1].toUpperCase(), title: match[1].toUpperCase(), index: match.index, length: match[0].length })),
+    ...pointMatches.map((match) => ({ kind: "POINT", title: match[2].trim(), index: match.index, length: match[0].length }))
+  ].sort((a, b) => a.index - b.index);
+
+  const sections = markers.map((marker, index) => {
+    const next = markers[index + 1];
+    return {
+      ...marker,
+      content: body.slice(marker.index + marker.length, next?.index ?? body.length).trim()
+    };
+  });
+  const outline = sections
+    .filter((section) => section.kind === "POINT")
+    .map((section) => {
+      const paragraphs = splitParagraphs(section.content);
+      const passage = paragraphs[0]?.match(scriptureReferencePattern)?.[0] ? paragraphs.shift() : "";
+      return {
+        id: createId("block"),
+        type: "Main Point",
+        title: section.title,
+        body: [passage, ...paragraphs].filter(Boolean).join("\n\n")
+      };
+    });
+  const introduction = sections.find((section) => section.kind === "INTRODUCTION")?.content || "";
+  const conclusion = sections.find((section) => section.kind === "CONCLUSION")?.content || "";
+  const invitation = sections.find((section) => section.kind === "INVITATION")?.content || "";
+  const applications = [...body.matchAll(/Life Application:\s*([\s\S]*?)(?=\n\n(?:[a-e]\.|[IVX]+\.\s|CONCLUSION|INVITATION)|$)/gi)]
+    .map((match) => match[1].trim())
+    .filter(Boolean)
+    .join("\n\n");
+  const scriptureBlocks = [...body.matchAll(/^((?:[1-3]\s*)?[A-Z][A-Za-z ]+\s+\d+:\d+(?:[–-]\d+)?\s*\([A-Z]{2,}\))\s+(.+)$/gm)]
+    .map((match) => ({
+      id: createId("scripture"),
+      reference: match[1].trim(),
+      text: match[2].trim()
+    }));
+  const supportingScriptures = [...new Set([...body.matchAll(scriptureReferencePattern)].map((match) => match[0].replace(/\s*\([A-Z]{2,}\)/, "").trim()))]
+    .filter((reference) => reference !== mainScripture)
+    .join("; ");
+
+  return {
+    title,
+    mainScripture,
+    supportingScriptures,
+    introduction,
+    outline,
+    applications,
+    conclusion,
+    invitation,
+    scriptureBlocks,
+    bigIdea: outline[0]?.title ? `Jesus calls us forward from ${outline[0].title.toLowerCase()} into a transformed life.` : "",
+    status: "Drafting",
+    tags: ["manuscript import"],
+    topics: []
+  };
+}
+
+function applyParsedSermon(parsed) {
+  setValue("title", parsed.title);
+  setValue("mainScripture", parsed.mainScripture);
+  setValue("supportingScriptures", parsed.supportingScriptures);
+  setValue("introduction", parsed.introduction);
+  setValue("bigIdea", parsed.bigIdea);
+  setValue("applications", parsed.applications);
+  setValue("conclusion", parsed.conclusion);
+  setValue("invitation", parsed.invitation);
+  setValue("status", parsed.status);
+  setValue("tags", listToString(parsed.tags));
+  setValue("topics", listToString(parsed.topics));
+  renderOutline(parsed.outline);
+  renderScriptureBlocks(parsed.scriptureBlocks);
+  setValue("prep-manuscript", Boolean(parsed.outline.length && parsed.introduction && parsed.conclusion));
+  updateMetrics();
+  setEditorMode("write");
+  scheduleAutosave();
+  toast(`Built "${parsed.title}" from pasted manuscript.`);
+}
+
 function updateMetrics() {
   const metrics = calculateSermonMetrics(readForm());
   $("#word-count").textContent = metrics.words;
@@ -370,6 +474,15 @@ function bindEditor() {
   $("#sermon-form").addEventListener("input", scheduleAutosave);
   $("#save-sermon").addEventListener("click", () => save());
   $("#save-sermon-bottom").addEventListener("click", () => save());
+  $("#parse-manuscript")?.addEventListener("click", () => {
+    try {
+      const pasted = getValue("manuscript-paste").trim();
+      const parsed = parseSermonManuscript(pasted);
+      applyParsedSermon(parsed);
+    } catch (error) {
+      toast(error.message || "Could not parse that sermon.", "error");
+    }
+  });
   $("#focus-mode").addEventListener("click", () => document.body.classList.toggle("writing-focus"));
   $("#focus-mode-top")?.addEventListener("click", () => document.body.classList.toggle("writing-focus"));
   $("#print-sermon").addEventListener("click", () => window.print());

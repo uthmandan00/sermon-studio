@@ -255,6 +255,17 @@
   padding: 20px;
 }
 
+.paste-section h2 {
+  margin: 0;
+}
+
+.manuscript-paste {
+  min-height: 280px;
+  font-family: var(--font-serif);
+  font-size: 1.04rem;
+  line-height: 1.65;
+}
+
 #basic .section-body,
 #content .section-body {
   background: var(--surface);

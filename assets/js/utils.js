@@ -54,23 +54,26 @@ export function wordCount(text = "") {
 }
 
 export function sermonPlainText(sermon = {}) {
+  const roman = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
   const outline = (sermon.outline || [])
-    .map((block) => `${block.type}: ${block.title}\n${block.body}`)
+    .map((block, index) => {
+      if (block.type === "Main Point") return `${roman[index] || index + 1}. ${block.title}\n${block.body}`;
+      return `${block.type}: ${block.title}\n${block.body}`;
+    })
     .join("\n\n");
   const scriptures = (sermon.scriptureBlocks || [])
     .map((block) => `${block.reference}\n${block.text}`)
     .join("\n\n");
   return [
-    sermon.title,
-    sermon.subtitle,
-    `Scripture: ${sermon.mainScripture || ""}`,
+    String(sermon.title || "").toUpperCase(),
+    sermon.mainScripture || sermon.subtitle,
+    sermon.introduction ? `INTRODUCTION\n\n${sermon.introduction}` : "",
     sermon.bigIdea,
-    sermon.introduction,
     outline,
     scriptures,
-    sermon.applications,
-    sermon.conclusion,
-    sermon.invitation,
+    sermon.applications ? `LIFE APPLICATIONS\n\n${sermon.applications}` : "",
+    sermon.conclusion ? `CONCLUSION\n\n${sermon.conclusion}` : "",
+    sermon.invitation ? `INVITATION\n\n${sermon.invitation}` : "",
     sermon.personalNotes,
     sermon.researchNotes,
     sermon.prayerNotes
