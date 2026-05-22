@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sermon Studio - Dashboard</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar rooted-sidebar" aria-label="Primary navigation">
+      <a class="brand rooted-brand" href="index.html">
+        <span class="leaf-mark" aria-hidden="true"></span>
+        <span><strong class="app-name">Sermon Studio</strong><span class="app-subtitle">Sermon Manager</span></span>
+      </a>
+      <nav class="nav-section">
+        <p class="nav-title">Main</p>
+        <a class="nav-link" href="index.html"><span class="nav-icon">H</span>Dashboard</a>
+        <a class="nav-link" href="sermons/index.html"><span class="nav-icon">B</span>Sermons</a>
+        <a class="nav-link" href="series/index.html"><span class="nav-icon">S</span>Series</a>
+        <a class="nav-link" href="calendar/index.html"><span class="nav-icon">C</span>Calendar</a>
+        <a class="nav-link" href="sermons/index.html?focus=search"><span class="nav-icon">Q</span>Search</a>
+        <a class="nav-link" href="settings/index.html"><span class="nav-icon">G</span>Settings</a>
+      </nav>
+      <nav class="nav-section">
+        <p class="nav-title">Create New</p>
+        <a class="nav-link" href="sermons/sermon-editor.html"><span class="nav-icon nav-plus">+</span>New Sermon</a>
+        <a class="nav-link" href="series/index.html"><span class="nav-icon nav-plus">+</span>New Series</a>
+      </nav>
+      <div class="nav-section">
+        <p class="nav-title">Data</p>
+        <button class="nav-link btn-ghost" id="backup-export" type="button"><span class="nav-icon">E</span>Export Backup</button>
+        <label class="nav-link" for="backup-import"><span class="nav-icon">I</span>Import Backup</label>
+        <input class="sr-only" id="backup-import" type="file" accept="application/json">
+      </div>
+      <div class="pastor-card">
+        <div class="avatar">PJ</div>
+        <div>
+          <strong class="pastor-name">Pastor Jonathan</strong>
+          <span class="church-name">Grace City Church</span>
+        </div>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-icon menu-toggle" type="button" aria-expanded="false" aria-label="Open menu"><span></span><span></span><span></span></button>
+          <strong>Dashboard</strong>
+        </div>
+        <div class="topbar-actions">
+          <label class="search-shell">
+            <span aria-hidden="true">Q</span>
+            <input id="global-search" type="search" placeholder="Search sermons...">
+            <kbd>Ctrl K</kbd>
+          </label>
+          <a class="round-action" href="sermons/sermon-view.html?id=sermon-save-me-1&mode=preach" aria-label="Open preaching view">P</a>
+          <button class="round-action theme-toggle" type="button" aria-label="Toggle theme">T</button>
+        </div>
+      </header>
+      <div class="page">
+        <section class="dashboard-hero">
+          <div>
+            <p class="greeting" id="dashboard-greeting">Good morning, Pastor Jonathan.</p>
+            <h1>Let's prepare for what God will do.</h1>
+            <p>Here's what's happening in your ministry this week.</p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="sermons/sermon-editor.html"><span>+</span>New Sermon</a>
+              <a class="btn" href="series/index.html"><span>+</span>New Series</a>
+              <a class="btn btn-soft" href="sermons/sermon-view.html?id=sermon-save-me-1&mode=preach">Preaching View</a>
+            </div>
+          </div>
+          <article class="current-series-card" id="current-series-card"></article>
+        </section>
+
+        <section class="grid grid-4" id="stats" aria-label="Quick stats"></section>
+
+        <section class="card panel readiness-strip" id="readiness-strip"></section>
+
+        <section class="dashboard-grid">
+          <section class="card panel dashboard-panel">
+            <div class="panel-heading"><h2>Upcoming Sermons</h2><a class="btn btn-small" href="calendar/index.html">View Calendar</a></div>
+            <div id="upcoming-list"></div>
+          </section>
+          <aside class="card panel dashboard-panel">
+            <div class="panel-heading"><h2>Recent Activity</h2><a class="btn btn-small" href="sermons/index.html">View All</a></div>
+            <ul class="activity-feed" id="activity-feed"></ul>
+          </aside>
+        </section>
+
+        <section class="dashboard-grid lower-grid">
+          <section class="card panel dashboard-panel">
+            <div class="panel-heading"><h2>Quick Access</h2></div>
+            <div class="quick-access">
+              <a href="sermons/index.html?focus=search"><span>Q</span><strong>Search Library</strong><small>Find any sermon fast</small></a>
+              <a href="sermons/sermon-editor.html"><span>N</span><strong>New Draft</strong><small>Start writing today</small></a>
+              <a href="series/index.html"><span>S</span><strong>Series Planner</strong><small>Organize the season</small></a>
+              <button class="backup-export-trigger" type="button"><span>E</span><strong>Export Backup</strong><small>Protect your work</small></button>
+            </div>
+          </section>
+          <aside class="card panel focus-panel">
+            <h2>This Week's Focus</h2>
+            <p id="weekly-focus-text">Faithful preparation leads to powerful proclamation.</p>
+            <div class="leaf-cluster" aria-hidden="true"><span></span><span></span><span></span></div>
+          </aside>
+        </section>
+        <section class="card panel insight-panel">
+          <div class="panel-heading"><h2>Ministry Insights</h2><a class="btn btn-small" href="sermons/index.html">Open Manager</a></div>
+          <div class="insight-list" id="insight-list"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script type="module" src="assets/js/app.js"></script>
+  <script type="module" src="assets/js/dashboard.js"></script>
+</body>
+</html>

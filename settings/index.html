@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sermon Studio - Settings</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/sermons.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar rooted-sidebar" aria-label="Primary navigation">
+      <a class="brand rooted-brand" href="../index.html"><span class="leaf-mark" aria-hidden="true"></span><span><strong class="app-name">Sermon Studio</strong><span class="app-subtitle">Sermon Manager</span></span></a>
+      <nav class="nav-section"><p class="nav-title">Main</p><a class="nav-link" href="../index.html"><span class="nav-icon">H</span>Dashboard</a><a class="nav-link" href="../sermons/index.html"><span class="nav-icon">B</span>Sermons</a><a class="nav-link" href="../series/index.html"><span class="nav-icon">S</span>Series</a><a class="nav-link" href="../calendar/index.html"><span class="nav-icon">C</span>Calendar</a><a class="nav-link" href="../sermons/index.html?focus=search"><span class="nav-icon">Q</span>Search</a><a class="nav-link" href="index.html"><span class="nav-icon">G</span>Settings</a></nav>
+      <nav class="nav-section"><p class="nav-title">Create New</p><a class="nav-link" href="../sermons/sermon-editor.html"><span class="nav-icon nav-plus">+</span>New Sermon</a><a class="nav-link" href="../series/index.html"><span class="nav-icon nav-plus">+</span>New Series</a></nav>
+      <div class="nav-section"><p class="nav-title">Data</p><button class="nav-link btn-ghost" id="backup-export" type="button"><span class="nav-icon">E</span>Export Backup</button><label class="nav-link" for="backup-import"><span class="nav-icon">I</span>Import Backup</label><input class="sr-only" id="backup-import" type="file" accept="application/json"></div>
+      <div class="pastor-card"><div class="avatar">PJ</div><div><strong class="pastor-name">Pastor Jonathan</strong><span class="church-name">Grace City Church</span></div></div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left"><button class="menu-icon menu-toggle" type="button" aria-expanded="false" aria-label="Open menu"><span></span><span></span><span></span></button><strong>Settings</strong></div>
+        <div class="topbar-actions"><label class="search-shell"><span aria-hidden="true">Q</span><input id="global-search" type="search" placeholder="Search sermons..."><kbd>Ctrl K</kbd></label><button class="round-action theme-toggle" type="button" aria-label="Toggle theme">T</button></div>
+      </header>
+      <div class="page">
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Workspace Settings</p>
+            <h1>Make the app feel like yours.</h1>
+            <p>Update the working name, pastor profile, church name, and dashboard focus text.</p>
+          </div>
+          <div class="hero-actions">
+            <button class="btn btn-primary" form="profile-form" type="submit">Save Settings</button>
+          </div>
+        </section>
+
+        <section class="grid grid-4" id="storage-health"></section>
+
+        <section class="series-overview-grid">
+          <form class="card panel form-grid" id="profile-form">
+            <label class="field"><span>App Name</span><input class="input" id="profile-app-name" required></label>
+            <label class="field"><span>App Subtitle</span><input class="input" id="profile-app-subtitle"></label>
+            <label class="field"><span>Pastor Name</span><input class="input" id="profile-pastor-name" required></label>
+            <label class="field"><span>Church Name</span><input class="input" id="profile-church-name"></label>
+            <label class="field full"><span>This Week's Focus</span><textarea class="textarea" id="profile-weekly-focus"></textarea></label>
+            <div class="button-row full"><button class="btn btn-primary" type="submit">Save Settings</button><button class="btn" id="restore-profile-defaults" type="button">Use Starter Values</button></div>
+          </form>
+
+          <aside class="card panel">
+            <h2>Preview</h2>
+            <div class="pastor-card settings-preview">
+              <div class="avatar" id="preview-avatar">PJ</div>
+              <div>
+                <strong id="preview-pastor">Pastor Jonathan</strong>
+                <span id="preview-church">Grace City Church</span>
+              </div>
+            </div>
+            <div class="visually-separated">
+              <h3 id="preview-app">Sermon Studio</h3>
+              <p class="muted" id="preview-subtitle">Sermon Manager</p>
+              <p id="preview-focus">Faithful preparation leads to powerful proclamation.</p>
+            </div>
+            <div class="button-row visually-separated">
+              <button class="btn backup-export-trigger" type="button">Export Backup</button>
+              <label class="btn" for="backup-import">Import Backup</label>
+            </div>
+            <div class="visually-separated">
+              <h3>Danger Zone</h3>
+              <p class="muted">Resetting replaces your current local sermons and series with starter sample data. Export a backup first if you may need this workspace later.</p>
+              <button class="btn btn-danger" id="reset-sample-data" type="button">Reset to Sample Data</button>
+            </div>
+          </aside>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script type="module" src="../assets/js/app.js"></script>
+  <script type="module" src="../assets/js/settings.js"></script>
+</body>
+</html>

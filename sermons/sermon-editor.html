@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sermon Studio - Builder</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/editor.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar rooted-sidebar" aria-label="Primary navigation">
+      <a class="brand rooted-brand" href="../index.html"><span class="leaf-mark" aria-hidden="true"></span><span><strong class="app-name">Sermon Studio</strong><span class="app-subtitle">Sermon Manager</span></span></a>
+      <nav class="nav-section"><p class="nav-title">Main</p><a class="nav-link" href="../index.html"><span class="nav-icon">H</span>Dashboard</a><a class="nav-link" href="index.html"><span class="nav-icon">B</span>Sermons</a><a class="nav-link" href="../series/index.html"><span class="nav-icon">S</span>Series</a><a class="nav-link" href="../calendar/index.html"><span class="nav-icon">C</span>Calendar</a><a class="nav-link" href="../settings/index.html"><span class="nav-icon">G</span>Settings</a></nav>
+      <nav class="nav-section"><p class="nav-title">Tools</p><button class="nav-link btn-ghost" id="focus-mode" type="button"><span class="nav-icon">F</span>Focus Mode</button><button class="nav-link btn-ghost" id="print-sermon" type="button"><span class="nav-icon">P</span>Print Sermon</button><button class="nav-link btn-ghost" id="copy-notes" type="button"><span class="nav-icon">C</span>Copy Notes</button><button class="nav-link btn-ghost" id="export-manuscript" type="button"><span class="nav-icon">E</span>Export Manuscript</button></nav>
+      <div class="nav-section"><p class="nav-title">Data</p><button class="nav-link btn-ghost" id="backup-export" type="button"><span class="nav-icon">E</span>Export Backup</button><label class="nav-link" for="backup-import"><span class="nav-icon">I</span>Import Backup</label><input class="sr-only" id="backup-import" type="file" accept="application/json"></div>
+      <div class="pastor-card"><div class="avatar">PJ</div><div><strong class="pastor-name">Pastor Jonathan</strong><span class="church-name">Grace City Church</span></div></div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left"><button class="menu-icon menu-toggle" type="button" aria-expanded="false" aria-label="Open menu"><span></span><span></span><span></span></button><strong>Sermon Builder</strong></div>
+        <div class="topbar-actions"><button class="btn" id="focus-mode-top" type="button">Focus</button><button class="btn btn-primary" id="save-sermon" type="button">Save</button><button class="round-action theme-toggle" type="button" aria-label="Toggle theme">T</button></div>
+      </header>
+      <div class="page">
+        <form id="sermon-form" class="editor-layout builder-layout">
+          <aside class="toc card builder-info-pane">
+            <strong>Sermon Info</strong>
+            <div class="builder-mode-list" aria-label="Builder modes">
+              <button class="builder-mode active" type="button" data-mode="plan">Plan</button>
+              <button class="builder-mode" type="button" data-mode="write">Write</button>
+              <button class="builder-mode" type="button" data-mode="notes">Notes</button>
+              <button class="builder-mode" type="button" data-mode="review">Review</button>
+              <button class="builder-mode" type="button" data-mode="outputs">Outputs</button>
+            </div>
+            <div class="builder-toc-links">
+              <a href="#basic">Basic Info</a>
+              <a href="#scripture">Scripture</a>
+              <a href="#content">Sermon Content</a>
+              <a href="#outline">Outline</a>
+              <a href="#notes">Notes</a>
+              <a href="#organization">Organization</a>
+            </div>
+            <div class="visually-separated">
+              <div><span id="word-count">0</span> words</div>
+              <div><span id="speaking-time">0</span> min</div>
+              <div><span id="character-count">0</span> characters</div>
+            </div>
+            <div class="visually-separated builder-export-list">
+              <strong>Outputs</strong>
+              <button class="btn" id="copy-notes-panel" type="button">Copy Manuscript</button>
+              <button class="btn" id="export-manuscript-panel" type="button">Export Text</button>
+              <button class="btn" id="copy-handout-panel" type="button">Copy Handout</button>
+            </div>
+          </aside>
+          <section>
+            <div class="builder-workbar card">
+              <div>
+                <strong id="builder-mode-title">Plan</strong>
+                <span id="builder-mode-description">Set the sermon metadata, series placement, and core passage.</span>
+              </div>
+              <span id="autosave-status-top" class="status">Ready</span>
+            </div>
+            <details class="card editor-section" id="basic" data-mode="plan" open>
+              <summary>Basic Info</summary>
+              <div class="section-body form-grid">
+                <label class="field full"><span>Sermon Title</span><input class="input" id="title" required placeholder="Untitled sermon"></label>
+                <label class="field full"><span>Subtitle</span><input class="input" id="subtitle"></label>
+                <label class="field"><span>Series</span><select class="select" id="seriesId"></select></label>
+                <label class="field"><span>Week Number</span><input class="input" id="weekNumber" type="number" min="1"></label>
+                <label class="field"><span>Date Preached</span><input class="input" id="datePreached" type="date"></label>
+                <label class="field"><span>Location / Church</span><input class="input" id="location"></label>
+                <label class="field"><span>Speaker</span><input class="input" id="speaker"></label>
+                <label class="field"><span>Status</span><select class="select" id="status"><option>Planning</option><option>Drafting</option><option>Editing</option><option>Ready</option><option>Preached</option><option>Archived</option></select></label>
+              </div>
+            </details>
+            <details class="card editor-section" id="scripture" data-mode="plan">
+              <summary>Scripture</summary>
+              <div class="section-body form-grid">
+                <label class="field"><span>Main Scripture</span><input class="input" id="mainScripture" placeholder="Psalm 23:1-6"></label>
+                <label class="field"><span>Supporting Scriptures</span><input class="input" id="supportingScriptures" placeholder="John 10:11; Hebrews 13:20"></label>
+                <div class="full"><div class="button-row"><button class="btn" id="add-scripture" type="button">Add Scripture Block</button></div><div id="scripture-block-list"></div></div>
+              </div>
+            </details>
+            <details class="card editor-section" id="content" data-mode="write" open>
+              <summary>Sermon Content</summary>
+              <div class="section-body form-grid">
+                <label class="field full"><span>Big Idea</span><textarea class="textarea" id="bigIdea"></textarea></label>
+                <label class="field"><span>Sermon Purpose</span><textarea class="textarea" id="purpose"></textarea></label>
+                <label class="field"><span>Fallen Condition Focus</span><textarea class="textarea" id="fallenConditionFocus"></textarea></label>
+                <label class="field full"><span>Introduction</span><textarea class="textarea" id="introduction"></textarea></label>
+                <label class="field"><span>Transitions</span><textarea class="textarea" id="transitions"></textarea></label>
+                <label class="field"><span>Illustrations</span><textarea class="textarea" id="illustrations"></textarea></label>
+                <label class="field"><span>Applications</span><textarea class="textarea" id="applications"></textarea></label>
+                <label class="field"><span>Quotes</span><textarea class="textarea" id="quotes"></textarea></label>
+                <label class="field"><span>Conclusion</span><textarea class="textarea" id="conclusion"></textarea></label>
+                <label class="field"><span>Invitation / Response</span><textarea class="textarea" id="invitation"></textarea></label>
+              </div>
+            </details>
+            <details class="card editor-section" id="outline" data-mode="write" open>
+              <summary>Drag-and-Drop Outline</summary>
+              <div class="section-body">
+                <div class="quick-add" aria-label="Quick add outline blocks">
+                  <button class="btn" data-add="Main Point" type="button">Main Point</button>
+                  <button class="btn" data-add="Subpoint" type="button">Subpoint</button>
+                  <button class="btn" data-add="Illustration" type="button">Illustration</button>
+                  <button class="btn" data-add="Application" type="button">Application</button>
+                  <button class="btn" data-add="Scripture Block" type="button">Scripture</button>
+                  <button class="btn" data-add="Quote" type="button">Quote</button>
+                  <button class="btn" data-add="Transition" type="button">Transition</button>
+                  <button class="btn" data-add="Prayer" type="button">Prayer</button>
+                  <button class="btn" data-add="Discussion Question" type="button">Question</button>
+                </div>
+                <div id="outline-list"></div>
+              </div>
+            </details>
+            <details class="card editor-section" id="notes" data-mode="notes">
+              <summary>Notes and Research</summary>
+              <div class="section-body form-grid">
+                <label class="field"><span>Personal Notes</span><textarea class="textarea" id="personalNotes"></textarea></label>
+                <label class="field"><span>Research Notes</span><textarea class="textarea" id="researchNotes"></textarea></label>
+                <label class="field"><span>Commentary References</span><textarea class="textarea" id="commentaryReferences"></textarea></label>
+                <label class="field"><span>Prayer Notes</span><textarea class="textarea" id="prayerNotes"></textarea></label>
+              </div>
+            </details>
+            <details class="card editor-section" id="organization" data-mode="review">
+              <summary>Organization</summary>
+              <div class="section-body form-grid">
+                <label class="field"><span>Tags</span><input class="input" id="tags" placeholder="grace, prayer"></label>
+                <label class="field"><span>Topics</span><input class="input" id="topics" placeholder="Anxiety, Faith"></label>
+                <label class="field"><span>Estimated Sermon Length</span><input class="input" id="estimatedLength" type="number" min="1"></label>
+                <label class="field"><span>Audience</span><input class="input" id="audience"></label>
+                <label class="field"><span><input id="favorite" type="checkbox"> Favorite sermon</span></label>
+                <label class="field"><span><input id="pinned" type="checkbox"> Pin important sermon</span></label>
+              </div>
+            </details>
+            <section class="card editor-section prep-section" id="prep" data-mode="review">
+              <div class="section-body">
+                <div class="panel-heading"><h2>Preparation Checklist</h2><span class="status" id="prep-progress-label">0%</span></div>
+                <div class="prep-progress"><span id="prep-progress-bar"></span></div>
+                <div class="prep-readiness" id="prep-readiness"></div>
+                <div class="prep-checklist">
+                  <label><input id="prep-manuscript" type="checkbox"> Manuscript drafted</label>
+                  <label><input id="prep-slides" type="checkbox"> Slides planned</label>
+                  <label><input id="prep-handout" type="checkbox"> Handout prepared</label>
+                  <label><input id="prep-discussion" type="checkbox"> Discussion questions ready</label>
+                  <label><input id="prep-prayer" type="checkbox"> Prayer/preaching notes reviewed</label>
+                  <label><input id="prep-print" type="checkbox"> Printed/exported</label>
+                  <label><input id="prep-preachReady" type="checkbox"> Ready to preach</label>
+                </div>
+                <div class="button-row visually-separated">
+                  <button class="btn btn-primary" id="mark-ready" type="button">Mark Ready</button>
+                  <button class="btn" id="suggest-prep" type="button">Suggest Checklist</button>
+                </div>
+              </div>
+            </section>
+            <section class="card editor-section output-section" id="outputs" data-mode="outputs">
+              <div class="section-body">
+                <div class="form-grid output-notes">
+                  <label class="field"><span>Handout Notes</span><textarea class="textarea" id="outputHandout" placeholder="What should appear on the listener handout?"></textarea></label>
+                  <label class="field"><span>Slide Notes</span><textarea class="textarea" id="outputSlides" placeholder="Slide prompts or key visual beats"></textarea></label>
+                  <label class="field full"><span>Discussion Notes</span><textarea class="textarea" id="outputDiscussion" placeholder="Group discussion emphasis, questions, or leader notes"></textarea></label>
+                </div>
+                <div class="output-tabs" aria-label="Sermon outputs">
+                  <button class="output-tab active" type="button" data-output="manuscript">Manuscript</button>
+                  <button class="output-tab" type="button" data-output="handout">Handout</button>
+                  <button class="output-tab" type="button" data-output="questions">Discussion</button>
+                  <button class="output-tab" type="button" data-output="slides">Slides</button>
+                </div>
+                <div class="output-preview manuscript" id="output-preview"></div>
+                <div class="button-row">
+                  <button class="btn btn-primary" id="copy-output" type="button">Copy Current Output</button>
+                  <button class="btn" id="print-output" type="button">Print</button>
+                </div>
+              </div>
+            </section>
+            <div class="save-bar no-print">
+              <span id="autosave-status" class="muted">Ready</span>
+              <div class="button-row"><a class="btn" href="index.html">Back</a><button class="btn btn-primary" type="button" id="save-sermon-bottom">Save Sermon</button></div>
+            </div>
+          </section>
+        </form>
+      </div>
+    </main>
+  </div>
+  <script type="module" src="../assets/js/app.js"></script>
+  <script type="module" src="../assets/js/editor.js"></script>
+</body>
+</html>

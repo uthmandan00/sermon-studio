@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sermon Studio - Series</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/sermons.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar rooted-sidebar" aria-label="Primary navigation">
+      <a class="brand rooted-brand" href="../index.html"><span class="leaf-mark" aria-hidden="true"></span><span><strong class="app-name">Sermon Studio</strong><span class="app-subtitle">Sermon Manager</span></span></a>
+      <nav class="nav-section"><p class="nav-title">Main</p><a class="nav-link" href="../index.html"><span class="nav-icon">H</span>Dashboard</a><a class="nav-link" href="../sermons/index.html"><span class="nav-icon">B</span>Sermons</a><a class="nav-link" href="index.html"><span class="nav-icon">S</span>Series</a><a class="nav-link" href="../calendar/index.html"><span class="nav-icon">C</span>Calendar</a><a class="nav-link" href="../sermons/index.html?focus=search"><span class="nav-icon">Q</span>Search</a><a class="nav-link" href="../settings/index.html"><span class="nav-icon">G</span>Settings</a></nav>
+      <nav class="nav-section"><p class="nav-title">Create New</p><a class="nav-link" href="../sermons/sermon-editor.html"><span class="nav-icon nav-plus">+</span>New Sermon</a><button class="nav-link btn-ghost new-series-button" type="button"><span class="nav-icon nav-plus">+</span>New Series</button></nav>
+      <div class="nav-section"><p class="nav-title">Data</p><button class="nav-link btn-ghost" id="backup-export" type="button"><span class="nav-icon">E</span>Export Backup</button><label class="nav-link" for="backup-import"><span class="nav-icon">I</span>Import Backup</label><input class="sr-only" id="backup-import" type="file" accept="application/json"></div>
+      <div class="pastor-card"><div class="avatar">PJ</div><div><strong class="pastor-name">Pastor Jonathan</strong><span class="church-name">Grace City Church</span></div></div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left"><button class="menu-icon menu-toggle" type="button" aria-expanded="false" aria-label="Open menu"><span></span><span></span><span></span></button><strong>Series</strong></div>
+        <div class="topbar-actions"><label class="search-shell"><span aria-hidden="true">Q</span><input id="global-search" type="search" placeholder="Search sermons..."><kbd>Ctrl K</kbd></label><button class="btn btn-primary new-series-button" type="button">New Series</button><button class="round-action theme-toggle" type="button" aria-label="Toggle theme">T</button></div>
+      </header>
+      <div class="page">
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Sermon series</p>
+            <h1>Plan a preaching season.</h1>
+            <p>Group sermons by theme, scripture, dates, progress, and ministry focus.</p>
+          </div>
+          <div class="hero-actions">
+            <button class="btn btn-primary new-series-button" type="button">New Series</button>
+            <a class="btn" href="../sermons/sermon-editor.html">New Sermon</a>
+          </div>
+        </section>
+        <section class="card panel" id="series-form-card" hidden>
+          <h2>Series Details</h2>
+          <form id="series-form" class="form-grid">
+            <input id="series-id" type="hidden">
+            <label class="field"><span>Title</span><input class="input" id="series-title" required></label>
+            <label class="field"><span>Subtitle</span><input class="input" id="series-subtitle"></label>
+            <label class="field full"><span>Description</span><textarea class="textarea" id="series-description"></textarea></label>
+            <label class="field"><span>Theme Scripture</span><input class="input" id="series-scripture"></label>
+            <label class="field"><span>Theme Statement</span><input class="input" id="series-theme"></label>
+            <label class="field"><span>Start Date</span><input class="input" id="series-start" type="date"></label>
+            <label class="field"><span>End Date</span><input class="input" id="series-end" type="date"></label>
+            <label class="field"><span>Banner Color</span><input class="input" id="series-color" type="color" value="#0f6b35"></label>
+            <label class="field"><span>Status</span><select class="select" id="series-status"><option>Planning</option><option>Active</option><option>Completed</option><option>Archived</option></select></label>
+            <label class="field full"><span>Tags</span><input class="input" id="series-tags" placeholder="Psalms, Prayer"></label>
+            <div class="button-row full"><button class="btn btn-primary" type="submit">Save Series</button><button class="btn" id="cancel-series" type="button">Cancel</button></div>
+          </form>
+        </section>
+        <section class="grid grid-3" id="series-list"></section>
+      </div>
+    </main>
+  </div>
+  <script type="module" src="../assets/js/app.js"></script>
+  <script type="module" src="../assets/js/series.js"></script>
+</body>
+</html>
