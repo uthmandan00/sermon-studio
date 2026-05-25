@@ -27,7 +27,8 @@
             <strong>Sermon Info</strong>
             <div class="builder-mode-list" aria-label="Builder modes">
               <button class="builder-mode active" type="button" data-mode="plan">Plan</button>
-              <button class="builder-mode" type="button" data-mode="write">Write</button>
+              <button class="builder-mode" type="button" data-mode="manuscript">Manuscript</button>
+              <button class="builder-mode" type="button" data-mode="outline">Outline</button>
               <button class="builder-mode" type="button" data-mode="notes">Notes</button>
               <button class="builder-mode" type="button" data-mode="review">Review</button>
               <button class="builder-mode" type="button" data-mode="outputs">Outputs</button>
@@ -35,6 +36,7 @@
             <div class="builder-toc-links">
               <a href="#basic">Basic Info</a>
               <a href="#scripture">Scripture</a>
+              <a href="#manuscript">Manuscript</a>
               <a href="#content">Sermon Content</a>
               <a href="#outline">Outline</a>
               <a href="#notes">Notes</a>
@@ -100,7 +102,25 @@
                 <div class="full"><div class="button-row"><button class="btn" id="add-scripture" type="button">Add Scripture Block</button></div><div id="scripture-block-list"></div></div>
               </div>
             </details>
-            <details class="card editor-section" id="content" data-mode="write" open>
+            <section class="card editor-section manuscript-section" id="manuscript" data-mode="manuscript">
+              <div class="section-body">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">Primary writing space</p>
+                    <h2>Manuscript</h2>
+                  </div>
+                  <div class="button-row">
+                    <button class="btn btn-primary" id="sync-from-manuscript" type="button">Update Structure</button>
+                    <button class="btn" id="refresh-manuscript" type="button">Refresh Manuscript</button>
+                  </div>
+                </div>
+                <label class="field">
+                  <span>Write or edit the sermon in your normal preaching format</span>
+                  <textarea class="textarea manuscript-editor" id="manuscriptDraft"></textarea>
+                </label>
+              </div>
+            </section>
+            <details class="card editor-section" id="content" data-mode="outline" open>
               <summary>Sermon Content</summary>
               <div class="section-body form-grid">
                 <label class="field full"><span>Big Idea</span><textarea class="textarea" id="bigIdea"></textarea></label>
@@ -115,7 +135,7 @@
                 <label class="field"><span>Invitation / Response</span><textarea class="textarea" id="invitation"></textarea></label>
               </div>
             </details>
-            <details class="card editor-section" id="outline" data-mode="write" open>
+            <details class="card editor-section" id="outline" data-mode="outline" open>
               <summary>Drag-and-Drop Outline</summary>
               <div class="section-body">
                 <div class="quick-add" aria-label="Quick add outline blocks">

@@ -6,7 +6,8 @@ let currentSermon = null;
 let autosaveTimer = null;
 const modeText = {
   plan: ["Plan", "Set the sermon metadata, series placement, and core passage."],
-  write: ["Write", "Build the manuscript, outline, illustrations, applications, and response."],
+  manuscript: ["Manuscript", "Write and edit the full sermon in your normal preaching format."],
+  outline: ["Outline", "Refine structured sections for search, preaching view, handouts, and planning."],
   notes: ["Notes", "Gather research, commentary, personal notes, and prayer prompts."],
   review: ["Review", "Finalize organization, timing, tags, audience, and publishing details."],
   outputs: ["Outputs", "Prepare manuscript, handout, and discussion-question views from this sermon."]
@@ -33,6 +34,7 @@ function blankSermon() {
     purpose: "",
     fallenConditionFocus: "",
     introduction: "",
+    manuscriptDraft: "",
     outline: [],
     transitions: "",
     illustrations: "",
@@ -90,6 +92,7 @@ function getValue(id) {
 
 function fillForm(sermon) {
   Object.keys(sermon).forEach((key) => setValue(key, Array.isArray(sermon[key]) ? listToString(sermon[key]) : sermon[key]));
+  setValue("manuscriptDraft", sermon.manuscriptDraft || sermonPlainText(sermon));
   setValue("outputHandout", sermon.outputNotes?.handout || "");
   setValue("outputSlides", sermon.outputNotes?.slides || "");
   setValue("outputDiscussion", sermon.outputNotes?.discussion || "");
@@ -116,6 +119,7 @@ function readForm() {
     purpose: getValue("purpose").trim(),
     fallenConditionFocus: getValue("fallenConditionFocus").trim(),
     introduction: getValue("introduction").trim(),
+    manuscriptDraft: getValue("manuscriptDraft").trim(),
     outline: readOutline(),
     transitions: getValue("transitions").trim(),
     illustrations: getValue("illustrations").trim(),
@@ -280,6 +284,7 @@ function parseSermonManuscript(text = "") {
     applications,
     conclusion,
     invitation,
+    manuscriptDraft: text.trim(),
     scriptureBlocks,
     bigIdea: outline[0]?.title ? `Jesus calls us forward from ${outline[0].title.toLowerCase()} into a transformed life.` : "",
     status: "Drafting",
@@ -293,6 +298,7 @@ function applyParsedSermon(parsed) {
   setValue("mainScripture", parsed.mainScripture);
   setValue("supportingScriptures", parsed.supportingScriptures);
   setValue("introduction", parsed.introduction);
+  setValue("manuscriptDraft", parsed.manuscriptDraft);
   setValue("bigIdea", parsed.bigIdea);
   setValue("applications", parsed.applications);
   setValue("conclusion", parsed.conclusion);
@@ -305,7 +311,7 @@ function applyParsedSermon(parsed) {
   setValue("prep-manuscript", Boolean(parsed.outline.length && parsed.introduction && parsed.conclusion));
   updateMetrics();
   renderImportResult(parsed);
-  setEditorMode("write");
+  setEditorMode("manuscript");
   save({ quiet: true });
   toast(`Built and saved "${parsed.title}".`);
 }
@@ -331,6 +337,21 @@ function updateMetrics() {
   $("#character-count").textContent = metrics.characters;
   $("#speaking-time").textContent = metrics.speakingMinutes;
   updatePrepProgress();
+}
+
+function syncFromManuscript() {
+  try {
+    const parsed = parseSermonManuscript(getValue("manuscriptDraft").trim());
+    applyParsedSermon(parsed);
+  } catch (error) {
+    toast(error.message || "Could not update from manuscript.", "error");
+  }
+}
+
+function refreshManuscriptFromFields() {
+  setValue("manuscriptDraft", sermonPlainText(readForm()));
+  scheduleAutosave();
+  toast("Manuscript refreshed from structured fields.");
 }
 
 function updatePrepProgress() {
@@ -438,6 +459,22 @@ function outputHtml(sermon, type) {
   }).join("");
 }
 
+function manuscriptHtml(text = "") {
+  return text.split(/\n+/).map((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) return "";
+    if (/^(INTRODUCTION|CONCLUSION|INVITATION|LIFE APPLICATIONS)$/i.test(trimmed)) return `<h2>${escapeHtml(trimmed.toUpperCase())}</h2>`;
+    if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X)\.\s+/.test(trimmed)) return `<h2>${escapeHtml(trimmed)}</h2>`;
+    if (/^[A-Z0-9\s'":;,.!?-]{8,}$/.test(trimmed) && trimmed === trimmed.toUpperCase()) return `<h1>${escapeHtml(trimmed)}</h1>`;
+    if (scriptureReferencePattern.test(trimmed)) {
+      scriptureReferencePattern.lastIndex = 0;
+      return `<p class="scripture-line">${escapeHtml(trimmed)}</p>`;
+    }
+    scriptureReferencePattern.lastIndex = 0;
+    return `<p>${escapeHtml(trimmed)}</p>`;
+  }).join("");
+}
+
 function renderOutputPreview() {
   const preview = $("#output-preview");
   if (!preview) return;
@@ -503,6 +540,8 @@ function bindEditor() {
     setValue("manuscript-paste", "");
     toast("Paste field cleared.");
   });
+  $("#sync-from-manuscript")?.addEventListener("click", syncFromManuscript);
+  $("#refresh-manuscript")?.addEventListener("click", refreshManuscriptFromFields);
   $("#focus-mode").addEventListener("click", () => document.body.classList.toggle("writing-focus"));
   $("#focus-mode-top")?.addEventListener("click", () => document.body.classList.toggle("writing-focus"));
   $("#print-sermon").addEventListener("click", () => window.print());
@@ -591,15 +630,17 @@ function renderPreachingView(sermon) {
         <strong id="timer">00:00</strong>
       </div>
       <article class="preaching-content">
-        <h1>${escapeHtml(sermon.title)}</h1>
-        <p>${escapeHtml(sermon.subtitle || "")}</p>
         <p><strong>${escapeHtml(sermon.mainScripture || "")}</strong> - ${metrics.speakingMinutes} min estimated</p>
-        ${(sermon.scriptureBlocks || []).map((block) => `<div class="scripture-highlight"><strong>${escapeHtml(block.reference)}</strong><p>${escapeHtml(block.text)}</p></div>`).join("")}
-        <h2>Big Idea</h2><p>${escapeHtml(sermon.bigIdea || "")}</p>
-        <h2>Introduction</h2><p>${escapeHtml(sermon.introduction || "")}</p>
-        ${(sermon.outline || []).map((block) => `<h2>${escapeHtml(block.title || block.type)}</h2><p><em>${escapeHtml(block.type)}</em></p><p>${escapeHtml(block.body || "")}</p>`).join("")}
-        <h2>Conclusion</h2><p>${escapeHtml(sermon.conclusion || "")}</p>
-        <h2>Invitation / Response</h2><p>${escapeHtml(sermon.invitation || "")}</p>
+        ${sermon.manuscriptDraft ? manuscriptHtml(sermon.manuscriptDraft) : `
+          <h1>${escapeHtml(sermon.title)}</h1>
+          <p>${escapeHtml(sermon.subtitle || "")}</p>
+          ${(sermon.scriptureBlocks || []).map((block) => `<div class="scripture-highlight"><strong>${escapeHtml(block.reference)}</strong><p>${escapeHtml(block.text)}</p></div>`).join("")}
+          <h2>Big Idea</h2><p>${escapeHtml(sermon.bigIdea || "")}</p>
+          <h2>Introduction</h2><p>${escapeHtml(sermon.introduction || "")}</p>
+          ${(sermon.outline || []).map((block) => `<h2>${escapeHtml(block.title || block.type)}</h2><p><em>${escapeHtml(block.type)}</em></p><p>${escapeHtml(block.body || "")}</p>`).join("")}
+          <h2>Conclusion</h2><p>${escapeHtml(sermon.conclusion || "")}</p>
+          <h2>Invitation / Response</h2><p>${escapeHtml(sermon.invitation || "")}</p>
+        `}
       </article>
     </main>
   `;
@@ -640,13 +681,15 @@ function renderReadOnly(sermon) {
       <div class="button-row no-print"><a class="btn" href="sermon-editor.html?id=${sermon.id}">Edit</a><a class="btn btn-primary" href="sermon-view.html?id=${sermon.id}&mode=preach">Preaching View</a><button class="btn" id="print-readonly" type="button">Print Sermon</button></div>
     </section>
     <article class="card panel manuscript">
-      <h2>Scripture</h2><p>${escapeHtml(sermon.mainScripture || "")}</p>
-      ${(sermon.scriptureBlocks || []).map((block) => `<blockquote><strong>${escapeHtml(block.reference)}</strong><p>${escapeHtml(block.text)}</p></blockquote>`).join("")}
-      <h2>Big Idea</h2><p>${escapeHtml(sermon.bigIdea || "")}</p>
-      <h2>Introduction</h2><p>${escapeHtml(sermon.introduction || "")}</p>
-      ${(sermon.outline || []).map((block) => `<h2>${escapeHtml(block.title || block.type)}</h2><p><strong>${escapeHtml(block.type)}</strong></p><p>${escapeHtml(block.body || "")}</p>`).join("")}
-      <h2>Conclusion</h2><p>${escapeHtml(sermon.conclusion || "")}</p>
-      <h2>Notes</h2><p>${escapeHtml(sermon.personalNotes || "")}</p>
+      ${sermon.manuscriptDraft ? manuscriptHtml(sermon.manuscriptDraft) : `
+        <h2>Scripture</h2><p>${escapeHtml(sermon.mainScripture || "")}</p>
+        ${(sermon.scriptureBlocks || []).map((block) => `<blockquote><strong>${escapeHtml(block.reference)}</strong><p>${escapeHtml(block.text)}</p></blockquote>`).join("")}
+        <h2>Big Idea</h2><p>${escapeHtml(sermon.bigIdea || "")}</p>
+        <h2>Introduction</h2><p>${escapeHtml(sermon.introduction || "")}</p>
+        ${(sermon.outline || []).map((block) => `<h2>${escapeHtml(block.title || block.type)}</h2><p><strong>${escapeHtml(block.type)}</strong></p><p>${escapeHtml(block.body || "")}</p>`).join("")}
+        <h2>Conclusion</h2><p>${escapeHtml(sermon.conclusion || "")}</p>
+        <h2>Notes</h2><p>${escapeHtml(sermon.personalNotes || "")}</p>
+      `}
     </article>
   `;
   $("#print-readonly").addEventListener("click", () => window.print());

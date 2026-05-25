@@ -54,6 +54,7 @@ export function wordCount(text = "") {
 }
 
 export function sermonPlainText(sermon = {}) {
+  if (sermon.manuscriptDraft) return sermon.manuscriptDraft;
   const roman = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
   const outline = (sermon.outline || [])
     .map((block, index) => {

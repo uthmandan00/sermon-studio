@@ -1,6 +1,6 @@
 export const sampleData = {
   meta: {
-    version: 5,
+    version: 6,
     profile: {
       appName: "Sermon Studio",
       appSubtitle: "Sermon Manager",

@@ -1,5 +1,5 @@
 import { sampleData } from "../data/sample-data.js";
-import { createId, nowIso } from "./utils.js";
+import { createId, nowIso, sermonPlainText } from "./utils.js";
 
 const STORAGE_KEY = "sermon-manager-data-v1";
 
@@ -60,6 +60,14 @@ export function loadData() {
         }
       }));
       data.meta.version = 5;
+      saveData(data);
+    }
+    if ((data.meta.version || 1) < 6) {
+      data.sermons = data.sermons.map((sermon) => ({
+        ...sermon,
+        manuscriptDraft: sermon.manuscriptDraft || sermonPlainText(sermon)
+      }));
+      data.meta.version = 6;
       saveData(data);
     }
     return data;
