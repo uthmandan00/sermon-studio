@@ -1,5 +1,5 @@
-import { exportBackup, loadData, resetToSampleData, updateData } from "./storage.js";
-import { $, toast } from "./utils.js";
+import { createSafetySnapshot, exportBackup, listSafetySnapshots, loadData, resetToSampleData, restoreSafetySnapshot, updateData } from "./storage.js";
+import { $, escapeHtml, formatDateTime, toast } from "./utils.js";
 
 const defaults = {
   appName: "Sermon Studio",
@@ -64,10 +64,26 @@ function renderStorageHealth(data) {
   `).join("");
 }
 
+function renderSafetySnapshots() {
+  const target = $("#safety-snapshots");
+  if (!target) return;
+  const snapshots = listSafetySnapshots();
+  target.innerHTML = snapshots.length ? snapshots.map((snapshot) => `
+    <article class="safety-snapshot">
+      <span>
+        <strong>${escapeHtml(snapshot.reason)}</strong>
+        <small>${formatDateTime(snapshot.date)}</small>
+      </span>
+      <button class="btn btn-small restore-snapshot" data-id="${snapshot.id}" type="button">Restore</button>
+    </article>
+  `).join("") : `<p class="muted">No safety snapshots yet. The app creates them before destructive changes.</p>`;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const data = loadData();
   setValues(data.meta.profile || defaults);
   renderStorageHealth(data);
+  renderSafetySnapshots();
   $("#profile-form").addEventListener("input", updatePreview);
   $("#profile-form").addEventListener("submit", (event) => {
     event.preventDefault();
@@ -80,6 +96,20 @@ document.addEventListener("DOMContentLoaded", () => {
     window.setTimeout(() => window.location.reload(), 350);
   });
   $("#restore-profile-defaults").addEventListener("click", () => setValues(defaults));
+  $("#create-safety-snapshot").addEventListener("click", () => {
+    createSafetySnapshot("Manual safety backup");
+    renderSafetySnapshots();
+    toast("Safety backup created.");
+  });
+  $("#safety-snapshots").addEventListener("click", (event) => {
+    const restore = event.target.closest(".restore-snapshot");
+    if (!restore) return;
+    const confirmed = window.confirm("Restore this safety backup? Your current workspace will be saved as a new safety backup first.");
+    if (!confirmed) return;
+    restoreSafetySnapshot(restore.dataset.id);
+    toast("Safety backup restored. Reloading workspace.");
+    window.setTimeout(() => window.location.reload(), 500);
+  });
   $("#reset-sample-data").addEventListener("click", () => {
     const confirmed = window.confirm("Reset this local workspace to starter sample data? Export a backup first if you want to keep the current data.");
     if (!confirmed) return;

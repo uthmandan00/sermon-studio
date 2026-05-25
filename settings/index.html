@@ -64,6 +64,13 @@
               <label class="btn" for="backup-import">Import Backup</label>
             </div>
             <div class="visually-separated">
+              <div class="panel-heading">
+                <h3>Safety Backups</h3>
+                <button class="btn btn-small" id="create-safety-snapshot" type="button">Create Now</button>
+              </div>
+              <div class="safety-snapshot-list" id="safety-snapshots"></div>
+            </div>
+            <div class="visually-separated">
               <h3>Danger Zone</h3>
               <p class="muted">Resetting replaces your current local sermons and series with starter sample data. Export a backup first if you may need this workspace later.</p>
               <button class="btn btn-danger" id="reset-sample-data" type="button">Reset to Sample Data</button>

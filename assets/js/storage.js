@@ -2,6 +2,8 @@ import { sampleData } from "../data/sample-data.js";
 import { createId, nowIso, sermonPlainText } from "./utils.js";
 
 const STORAGE_KEY = "sermon-manager-data-v1";
+const SNAPSHOT_KEY = "sermon-manager-safety-snapshots-v1";
+const MAX_SNAPSHOTS = 8;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -95,6 +97,7 @@ export function updateData(mutator) {
 }
 
 export function deleteData(collection, id) {
+  createSafetySnapshot(`Before deleting ${collection.slice(0, -1)}`);
   return updateData((data) => {
     data[collection] = (data[collection] || []).filter((item) => item.id !== id);
     if (collection === "series") {
@@ -106,6 +109,13 @@ export function deleteData(collection, id) {
 }
 
 export function addActivity(data, message, type = "update") {
+  const latest = (data.meta.activity || [])[0];
+  const latestDate = latest?.date ? new Date(latest.date).getTime() : 0;
+  const isRecentDuplicate = latest?.message === message && latest?.type === type && Date.now() - latestDate < 10 * 60 * 1000;
+  if (isRecentDuplicate) {
+    latest.date = nowIso();
+    return;
+  }
   data.meta.activity = [
     { id: createId("act"), type, message, date: nowIso() },
     ...(data.meta.activity || [])
@@ -192,10 +202,43 @@ export function importBackup(json) {
   if (!Array.isArray(parsed.sermons) || !Array.isArray(parsed.series)) {
     throw new Error("Backup file is missing sermons or series.");
   }
+  createSafetySnapshot("Before importing backup");
   saveData(parsed);
   return parsed;
 }
 
 export function resetToSampleData() {
+  createSafetySnapshot("Before resetting sample data");
   saveData(clone(sampleData));
+}
+
+export function listSafetySnapshots() {
+  try {
+    const snapshots = JSON.parse(localStorage.getItem(SNAPSHOT_KEY) || "[]");
+    return Array.isArray(snapshots) ? snapshots : [];
+  } catch {
+    return [];
+  }
+}
+
+export function createSafetySnapshot(reason = "Safety backup") {
+  const current = localStorage.getItem(STORAGE_KEY);
+  if (!current) return null;
+  const snapshot = {
+    id: createId("snapshot"),
+    reason,
+    date: nowIso(),
+    data: current
+  };
+  const snapshots = [snapshot, ...listSafetySnapshots()].slice(0, MAX_SNAPSHOTS);
+  localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshots));
+  return snapshot;
+}
+
+export function restoreSafetySnapshot(id) {
+  const snapshot = listSafetySnapshots().find((item) => item.id === id);
+  if (!snapshot) throw new Error("Safety snapshot not found.");
+  createSafetySnapshot("Before restoring safety snapshot");
+  localStorage.setItem(STORAGE_KEY, snapshot.data);
+  return JSON.parse(snapshot.data);
 }
