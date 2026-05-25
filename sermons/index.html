@@ -30,8 +30,27 @@
           </div>
           <div class="hero-actions">
             <a class="btn btn-primary" href="sermon-editor.html">New Sermon</a>
+            <button class="btn" id="show-word-import" type="button">Import Word Docs</button>
             <a class="btn" href="../calendar/index.html">View Schedule</a>
           </div>
+        </section>
+        <section class="card panel word-import-card" id="word-import-card" hidden>
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Bulk import</p>
+              <h2>Import Word Sermons</h2>
+            </div>
+            <button class="btn" id="close-word-import" type="button">Close</button>
+          </div>
+          <p class="muted">Choose one or many .docx sermon files. Each file becomes a draft sermon with the full manuscript preserved.</p>
+          <div class="word-import-drop">
+            <label class="field">
+              <span>Word documents</span>
+              <input class="input" id="word-doc-files" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple>
+            </label>
+            <button class="btn btn-primary" id="import-word-docs" type="button">Import Selected</button>
+          </div>
+          <div class="import-log" id="word-import-log" aria-live="polite"></div>
         </section>
         <section class="filters" aria-label="Search and filters">
           <label class="field"><span>Search</span><input class="input" id="search-query" type="search" placeholder="Title, scripture, keyword, notes..."></label>

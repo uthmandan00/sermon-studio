@@ -32,6 +32,7 @@ The app also creates safety snapshots before destructive actions such as deletes
 
 - Dashboard with next-sermon prep, quick stats, activity, and insights
 - Sermon library with search, filters, statuses, duplication, archive, and delete
+- Bulk `.docx` Word sermon import from the Sermons page
 - Manuscript-first sermon builder with paste import and structured outline sync
 - Series planning and week-by-week overview
 - Preaching calendar

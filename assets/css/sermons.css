@@ -11,6 +11,49 @@
   box-shadow: 0 10px 28px rgba(24, 43, 34, 0.04);
 }
 
+.word-import-card {
+  margin-bottom: 18px;
+}
+
+.word-import-drop {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+  margin-top: 16px;
+}
+
+.import-log {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.import-log-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.import-log-item strong,
+.import-log-item span {
+  display: block;
+}
+
+.import-log-item span {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.import-log-item.error {
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--line));
+}
+
 .sermon-card {
   position: relative;
   border: 1px solid var(--line);
@@ -606,6 +649,10 @@
   }
 
   .series-slot {
+    grid-template-columns: 1fr;
+  }
+
+  .word-import-drop {
     grid-template-columns: 1fr;
   }
 }

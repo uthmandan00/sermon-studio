@@ -1,8 +1,11 @@
 import { deleteData, duplicateSermon, loadData, upsertSermon } from "./storage.js";
 import { filterSermons, getSearchState, renderFilterOptions, renderRecentSearches, renderSearchSummary, saveRecentSearch } from "./search.js";
-import { $, $$, calculateSermonMetrics, confirmAction, escapeHtml, formatDate, formatDateTime, prepProgress, readinessReview, toast } from "./utils.js";
+import { $, $$, calculateSermonMetrics, confirmAction, createId, escapeHtml, formatDate, formatDateTime, normalizeList, nowIso, prepProgress, readinessReview, toast } from "./utils.js";
 
 let selectedSermonId = "";
+const scriptureReferencePattern = /\b(?:[1-3]\s*)?[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\s+\d+:\d+(?:[\u2013-]\d+)?/g;
+const singleScriptureReferencePattern = /\b(?:[1-3]\s*)?[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\s+\d+:\d+(?:[\u2013-]\d+)?/;
+const romanPointPattern = /^(I|II|III|IV|V|VI|VII|VIII|IX|X)\.\s+(.+)$/i;
 
 function seriesTitle(data, seriesId) {
   return data.series.find((series) => series.id === seriesId)?.title || "Standalone";
@@ -86,6 +89,134 @@ function rerender() {
   renderRecentSearches(data);
 }
 
+function cleanTitle(value = "") {
+  return value.trim().replace(/^[\s"'\u2018\u2019\u201c\u201d]+|[\s"'\u2018\u2019\u201c\u201d]+$/g, "");
+}
+
+function parseImportedSermon(text, fileName = "Imported sermon") {
+  const lines = text.replace(/\r\n/g, "\n").split("\n").map((line) => line.trim()).filter(Boolean);
+  const title = cleanTitle(lines[0] || fileName.replace(/\.docx$/i, ""));
+  const scriptureLine = lines.slice(1, 5).find((line) => singleScriptureReferencePattern.test(line)) || "";
+  const firstReference = scriptureLine.match(singleScriptureReferencePattern)?.[0] || text.match(singleScriptureReferencePattern)?.[0] || "";
+  const outline = [];
+  lines.forEach((line, index) => {
+    const match = line.match(romanPointPattern);
+    if (!match) return;
+    const nextHeading = lines.slice(index + 1).findIndex((candidate) => romanPointPattern.test(candidate));
+    const end = nextHeading === -1 ? Math.min(lines.length, index + 10) : index + 1 + nextHeading;
+    outline.push({
+      id: createId("block"),
+      type: "Main Point",
+      title: match[2].trim(),
+      body: lines.slice(index + 1, end).join("\n\n")
+    });
+  });
+  const supportingScriptures = [...new Set((text.match(scriptureReferencePattern) || []).map((item) => item.trim()))]
+    .filter((reference) => reference !== firstReference)
+    .join("; ");
+  return {
+    id: createId("sermon"),
+    title,
+    subtitle: "",
+    seriesId: "",
+    weekNumber: "",
+    datePreached: "",
+    location: "",
+    speaker: "",
+    mainScripture: firstReference,
+    supportingScriptures,
+    scriptureBlocks: [],
+    bigIdea: "",
+    purpose: "",
+    fallenConditionFocus: "",
+    introduction: "",
+    manuscriptDraft: text.trim(),
+    outline,
+    transitions: "",
+    illustrations: "",
+    applications: "",
+    quotes: "",
+    conclusion: "",
+    invitation: "",
+    personalNotes: `Imported from ${fileName}.`,
+    researchNotes: "",
+    commentaryReferences: "",
+    prayerNotes: "",
+    outputNotes: { handout: "", slides: "", discussion: "" },
+    prepChecklist: {
+      manuscript: Boolean(text.trim()),
+      slides: false,
+      handout: false,
+      discussion: false,
+      prayer: false,
+      print: false,
+      preachReady: false
+    },
+    tags: normalizeList("word import"),
+    topics: [],
+    status: "Drafting",
+    estimatedLength: 30,
+    audience: "",
+    favorite: false,
+    pinned: false,
+    archived: false,
+    createdAt: nowIso(),
+    updatedAt: nowIso()
+  };
+}
+
+function appendImportLog(message, detail = "", type = "success") {
+  const target = $("#word-import-log");
+  if (!target) return;
+  target.insertAdjacentHTML("beforeend", `
+    <article class="import-log-item ${type === "error" ? "error" : ""}">
+      <span><strong>${escapeHtml(message)}</strong>${detail ? `<span>${escapeHtml(detail)}</span>` : ""}</span>
+    </article>
+  `);
+}
+
+async function importWordDocument(file) {
+  const response = await fetch("/api/import-docx", {
+    method: "POST",
+    headers: { "Content-Type": file.type || "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+    body: file
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || "Could not read Word document.");
+  if (!result.text?.trim()) throw new Error("No sermon text found in this document.");
+  const sermon = parseImportedSermon(result.text, file.name);
+  upsertSermon(sermon);
+  return sermon;
+}
+
+async function importWordDocuments() {
+  const input = $("#word-doc-files");
+  const files = Array.from(input?.files || []);
+  if (!files.length) {
+    toast("Choose one or more .docx files first.", "error");
+    return;
+  }
+  if (window.location.protocol === "file:") {
+    toast("Word import needs the local server URL: http://127.0.0.1:4173/", "error");
+    return;
+  }
+  $("#word-import-log").innerHTML = "";
+  let imported = 0;
+  for (const file of files) {
+    try {
+      const sermon = await importWordDocument(file);
+      imported += 1;
+      appendImportLog(`Imported ${sermon.title}`, `${file.name} -> ${sermon.mainScripture || "No scripture detected"}`);
+      selectedSermonId = sermon.id;
+    } catch (error) {
+      appendImportLog(`Could not import ${file.name}`, error.message, "error");
+    }
+  }
+  input.value = "";
+  rerender();
+  toast(`${imported} sermon${imported === 1 ? "" : "s"} imported.`);
+}
+
 function bindActions() {
   document.addEventListener("click", (event) => {
     const row = event.target.closest(".manager-row");
@@ -115,6 +246,12 @@ function bindActions() {
       rerender();
     }
   });
+  $("#show-word-import")?.addEventListener("click", () => {
+    $("#word-import-card").hidden = false;
+    $("#word-doc-files")?.focus();
+  });
+  $("#close-word-import")?.addEventListener("click", () => $("#word-import-card").hidden = true);
+  $("#import-word-docs")?.addEventListener("click", importWordDocuments);
   $("#sermon-list").addEventListener("keydown", (event) => {
     if (event.key !== "Enter") return;
     const row = event.target.closest(".manager-row");
