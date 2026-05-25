@@ -1,0 +1,13 @@
+{
+  "name": "sermon-studio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node tools/launch-check.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

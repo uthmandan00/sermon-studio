@@ -7,7 +7,7 @@ A local-first sermon management workspace for pastors and church leaders.
 From this folder:
 
 ```powershell
-node server.mjs
+npm start
 ```
 
 Then open:
@@ -17,6 +17,48 @@ http://127.0.0.1:4173/
 ```
 
 Use the local server URL instead of opening files directly with `file://`. The server gives the app the most reliable behavior for JavaScript modules, routing, and local storage.
+
+## Launch Readiness
+
+Run this before deploying or handing the app to another user:
+
+```powershell
+npm run check
+```
+
+The check verifies required launch files, JavaScript syntax, and local HTML asset links.
+
+## Deploying Live
+
+This app is local-first: sermon data is stored in each browser's `localStorage`, not in a shared cloud database. That is good for privacy and simple personal use, but it means every pastor/device has its own workspace unless backups are exported and imported.
+
+For a live hosted version, deploy it as a small Node app so Word `.docx` import keeps working:
+
+```powershell
+npm start
+```
+
+Production hosts should set:
+
+```text
+PORT=<the platform port>
+HOST=0.0.0.0
+```
+
+Health check endpoint:
+
+```text
+/health
+```
+
+If you deploy this as static files only, the app will still open, but Word document import will not work because `/api/import-docx` requires `server.mjs`.
+
+## Current Go-Live Caveats
+
+- There is no user login yet.
+- Data does not sync across devices yet.
+- Backups are user-managed JSON exports.
+- Do not treat the hosted app as a multi-user church database until authentication and cloud storage are added.
 
 ## Data Storage
 
@@ -32,6 +74,7 @@ The app also creates safety snapshots before destructive actions such as deletes
 
 - Dashboard with next-sermon prep, quick stats, activity, and insights
 - Sermon library with search, filters, statuses, duplication, archive, and delete
+- Drag-and-drop sermon preparation board
 - Bulk `.docx` Word sermon import from the Sermons page
 - Manuscript-first sermon builder with paste import and structured outline sync
 - Series planning and week-by-week overview

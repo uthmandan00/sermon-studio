@@ -90,6 +90,32 @@ function setupBackupControls() {
   }
 }
 
+function appRootPrefix() {
+  const path = window.location.pathname;
+  return path.includes("/sermons/") || path.includes("/series/") || path.includes("/calendar/") || path.includes("/settings/") ? "../" : "";
+}
+
+function setupInstallMetadata() {
+  const rootPrefix = appRootPrefix();
+  if (!document.querySelector('link[rel="manifest"]')) {
+    const manifest = document.createElement("link");
+    manifest.rel = "manifest";
+    manifest.href = `${rootPrefix}manifest.webmanifest`;
+    document.head.appendChild(manifest);
+  }
+  if (!document.querySelector('meta[name="theme-color"]')) {
+    const themeColor = document.createElement("meta");
+    themeColor.name = "theme-color";
+    themeColor.content = "#0f6b35";
+    document.head.appendChild(themeColor);
+  }
+  if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
+    navigator.serviceWorker.register(`${rootPrefix}service-worker.js`).catch(() => {
+      // The app still works without offline caching.
+    });
+  }
+}
+
 function initialsFromName(name = "") {
   const parts = name.replace(/^pastor\s+/i, "").trim().split(/\s+/).filter(Boolean);
   return (parts[0]?.[0] || "P") + (parts[1]?.[0] || "");
@@ -113,6 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupTheme();
   setupMobileNav();
   setupBackupControls();
+  setupInstallMetadata();
   applyProfile();
   document.addEventListener("keydown", (event) => {
     const search = document.querySelector("#global-search, #search-query");
@@ -126,7 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
     globalSearch.addEventListener("keydown", (event) => {
       if (event.key === "Enter" && globalSearch.value.trim()) {
         const path = window.location.pathname;
-        const rootPrefix = path.includes("/sermons/") || path.includes("/series/") || path.includes("/calendar/") || path.includes("/settings/") ? "../" : "";
+        const rootPrefix = appRootPrefix();
         window.location.href = `${rootPrefix}sermons/index.html?q=${encodeURIComponent(globalSearch.value.trim())}`;
       }
     });

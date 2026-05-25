@@ -1,22 +1,36 @@
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
-import { extname, join, normalize, resolve } from "node:path";
+import { extname, join, normalize, relative, resolve } from "node:path";
 import { inflateRawSync } from "node:zlib";
 
 const root = resolve(".");
 const port = Number(process.env.PORT || 4173);
+const host = process.env.HOST || "127.0.0.1";
+const maxUploadBytes = Number(process.env.MAX_UPLOAD_BYTES || 25 * 1024 * 1024);
 const types = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".mjs": "text/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8"
+  ".json": "application/json; charset=utf-8",
+  ".webmanifest": "application/manifest+json; charset=utf-8",
+  ".svg": "image/svg+xml; charset=utf-8",
+  ".png": "image/png"
 };
 
 function readBody(request) {
   return new Promise((resolveBody, rejectBody) => {
     const chunks = [];
-    request.on("data", (chunk) => chunks.push(chunk));
+    let total = 0;
+    request.on("data", (chunk) => {
+      total += chunk.length;
+      if (total > maxUploadBytes) {
+        rejectBody(new Error("File is too large."));
+        request.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
     request.on("end", () => resolveBody(Buffer.concat(chunks)));
     request.on("error", rejectBody);
   });
@@ -84,38 +98,77 @@ function docxXmlToText(xml) {
 
 async function handleDocxImport(request, response) {
   try {
+    const contentType = request.headers["content-type"] || "";
+    if (!contentType.includes("wordprocessingml.document") && !contentType.includes("octet-stream")) {
+      response.writeHead(415, securityHeaders({ "Content-Type": "application/json; charset=utf-8" }));
+      response.end(JSON.stringify({ error: "Upload a .docx Word document." }));
+      return;
+    }
     const body = await readBody(request);
     const xml = extractZipEntry(body, "word/document.xml").toString("utf8");
     const text = docxXmlToText(xml);
-    response.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+    response.writeHead(200, securityHeaders({ "Content-Type": "application/json; charset=utf-8" }));
     response.end(JSON.stringify({ text }));
   } catch (error) {
-    response.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+    response.writeHead(error.message === "File is too large." ? 413 : 400, securityHeaders({ "Content-Type": "application/json; charset=utf-8" }));
     response.end(JSON.stringify({ error: error.message || "Could not import DOCX." }));
   }
+}
+
+function securityHeaders(extra = {}) {
+  return {
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+    "Cross-Origin-Resource-Policy": "same-origin",
+    ...extra
+  };
+}
+
+function isInsideRoot(filePath) {
+  const pathFromRoot = relative(root, filePath);
+  return pathFromRoot && !pathFromRoot.startsWith("..") && !normalize(pathFromRoot).startsWith("..");
+}
+
+function cacheHeader(filePath) {
+  if (filePath.endsWith(".html") || filePath.endsWith("service-worker.js")) return "no-cache";
+  return "public, max-age=3600";
 }
 
 createServer(async (request, response) => {
   try {
     const url = new URL(request.url || "/", "http://localhost");
+    if (request.method === "GET" && url.pathname === "/health") {
+      response.writeHead(200, securityHeaders({ "Content-Type": "application/json; charset=utf-8" }));
+      response.end(JSON.stringify({ ok: true, app: "Sermon Studio" }));
+      return;
+    }
     if (request.method === "POST" && url.pathname === "/api/import-docx") {
       await handleDocxImport(request, response);
       return;
     }
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      response.writeHead(405, securityHeaders({ Allow: "GET, HEAD, POST" }));
+      response.end("Method not allowed");
+      return;
+    }
     const pathname = url.pathname.endsWith("/") ? `${url.pathname}index.html` : url.pathname;
     const filePath = normalize(join(root, decodeURIComponent(pathname)));
-    if (!filePath.startsWith(root)) {
-      response.writeHead(403);
+    if (!isInsideRoot(filePath)) {
+      response.writeHead(403, securityHeaders());
       response.end("Forbidden");
       return;
     }
     const body = await readFile(filePath);
-    response.writeHead(200, { "Content-Type": types[extname(filePath)] || "text/plain; charset=utf-8" });
-    response.end(body);
+    response.writeHead(200, securityHeaders({
+      "Content-Type": types[extname(filePath)] || "text/plain; charset=utf-8",
+      "Cache-Control": cacheHeader(filePath)
+    }));
+    response.end(request.method === "HEAD" ? undefined : body);
   } catch {
-    response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+    response.writeHead(404, securityHeaders({ "Content-Type": "text/plain; charset=utf-8" }));
     response.end("Not found");
   }
-}).listen(port, "127.0.0.1", () => {
-  console.log(`Sermon Manager running at http://127.0.0.1:${port}`);
+}).listen(port, host, () => {
+  console.log(`Sermon Manager running at http://${host}:${port}`);
 });
