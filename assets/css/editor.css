@@ -110,6 +110,89 @@
   min-height: 36px;
 }
 
+.simple-builder .sidebar {
+  display: none;
+}
+
+.simple-builder .app-shell,
+.simple-builder .editor-layout {
+  display: block;
+}
+
+.simple-builder .main {
+  min-width: 0;
+}
+
+.simple-builder .page {
+  width: min(1060px, calc(100% - 32px));
+  padding-top: 18px;
+}
+
+.simple-builder .topbar {
+  padding-left: max(18px, calc((100vw - 1060px) / 2));
+  padding-right: max(18px, calc((100vw - 1060px) / 2));
+}
+
+.simple-builder .toc {
+  position: sticky;
+  top: 76px;
+  z-index: 11;
+  display: block;
+  margin-bottom: 14px;
+  padding: 10px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.simple-builder .toc > strong,
+.simple-builder .builder-toc-links,
+.simple-builder .builder-metrics,
+.simple-builder .builder-export-list,
+.simple-builder .import-result[hidden] {
+  display: none;
+}
+
+.simple-builder .import-result {
+  margin-top: 10px;
+}
+
+.simple-builder .builder-mode-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+
+.simple-builder .builder-mode {
+  flex: 1 1 122px;
+  min-height: 40px;
+  border-radius: 999px;
+}
+
+.simple-builder .builder-workbar {
+  position: static;
+  margin-bottom: 14px;
+}
+
+.simple-builder .editor-section {
+  border-radius: 14px;
+}
+
+.simple-builder .editor-section summary {
+  min-height: 48px;
+  background: var(--surface);
+}
+
+.simple-builder #paste-sermon {
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+}
+
+.simple-builder .save-bar {
+  width: min(100%, 1060px);
+  margin-inline: auto;
+}
+
 .import-result {
   display: grid;
   gap: 8px;
@@ -447,7 +530,35 @@
     position: static;
   }
 
+  .simple-builder .toc {
+    position: sticky;
+    top: 72px;
+  }
+
+  .simple-builder .topbar-actions .btn {
+    padding-inline: 12px;
+  }
+
   .prep-checklist {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .simple-builder .page {
+    width: min(100% - 20px, 1060px);
+  }
+
+  .simple-builder .topbar {
+    padding-inline: 10px;
+  }
+
+  .simple-builder .builder-mode-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .simple-builder .builder-mode {
+    min-width: 0;
   }
 }

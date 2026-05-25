@@ -4,6 +4,7 @@ import { $, $$, calculateSermonMetrics, createId, escapeHtml, listToString, norm
 const outlineTypes = ["Main Point", "Subpoint", "Illustration", "Application", "Scripture Block", "Quote", "Transition", "Prayer", "Discussion Question"];
 let currentSermon = null;
 let autosaveTimer = null;
+const SIMPLE_VIEW_KEY = "sermon-builder-simple-view";
 const modeText = {
   plan: ["Plan", "Set the sermon metadata, series placement, and core passage."],
   manuscript: ["Manuscript", "Write and edit the full sermon in your normal preaching format."],
@@ -15,6 +16,22 @@ const modeText = {
 let currentOutput = "manuscript";
 const romanPointPattern = /^(I|II|III|IV|V|VI|VII|VIII|IX|X)\.\s+(.+)$/i;
 const scriptureReferencePattern = /\b(?:[1-3]\s*)?[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\s+\d+:\d+(?:[\u2013-]\d+)?(?:\s*\([A-Z]{2,}\))?/g;
+
+function setSimpleView(enabled) {
+  document.body.classList.toggle("simple-builder", enabled);
+  localStorage.setItem(SIMPLE_VIEW_KEY, enabled ? "true" : "false");
+  $$(".simple-mode-label").forEach((label) => {
+    label.textContent = enabled ? "Full View" : "Simple View";
+  });
+  ["simple-mode", "simple-mode-top"].forEach((id) => {
+    const button = $(`#${id}`);
+    if (button) button.setAttribute("aria-pressed", String(enabled));
+  });
+}
+
+function toggleSimpleView() {
+  setSimpleView(!document.body.classList.contains("simple-builder"));
+}
 
 function blankSermon() {
   const params = new URLSearchParams(window.location.search);
@@ -542,6 +559,8 @@ function bindEditor() {
   });
   $("#sync-from-manuscript")?.addEventListener("click", syncFromManuscript);
   $("#refresh-manuscript")?.addEventListener("click", refreshManuscriptFromFields);
+  $("#simple-mode")?.addEventListener("click", toggleSimpleView);
+  $("#simple-mode-top")?.addEventListener("click", toggleSimpleView);
   $("#focus-mode").addEventListener("click", () => document.body.classList.toggle("writing-focus"));
   $("#focus-mode-top")?.addEventListener("click", () => document.body.classList.toggle("writing-focus"));
   $("#print-sermon").addEventListener("click", () => window.print());
@@ -716,5 +735,6 @@ document.addEventListener("DOMContentLoaded", () => {
   fillSeriesOptions(data);
   fillForm(sermon);
   bindEditor();
+  setSimpleView(localStorage.getItem(SIMPLE_VIEW_KEY) === "true");
   setEditorMode("plan");
 });
