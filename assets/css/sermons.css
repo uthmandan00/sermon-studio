@@ -67,6 +67,10 @@
   text-transform: uppercase;
 }
 
+[data-theme="dark"] .manager-table-header {
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+
 .manager-table {
   display: grid;
 }
@@ -85,6 +89,11 @@
 .manager-row:hover,
 .manager-row.selected {
   background: color-mix(in srgb, var(--accent) 7%, white);
+}
+
+[data-theme="dark"] .manager-row:hover,
+[data-theme="dark"] .manager-row.selected {
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
 }
 
 .manager-row.selected {
@@ -356,6 +365,10 @@
   font-weight: 850;
 }
 
+[data-theme="dark"] .month-cell span {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+}
+
 .month-cell.has-sermon {
   border-color: color-mix(in srgb, var(--accent) 26%, var(--line));
   cursor: pointer;
@@ -405,6 +418,12 @@
   background:
     linear-gradient(120deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.68)),
     linear-gradient(145deg, #eef6ef, #d4e6d8 44%, #7f9f83);
+}
+
+[data-theme="dark"] .series-overview-hero {
+  background:
+    linear-gradient(120deg, color-mix(in srgb, var(--surface) 94%, transparent), color-mix(in srgb, var(--surface) 70%, transparent)),
+    linear-gradient(145deg, #16221b, #21362a 44%, #536a55);
 }
 
 .series-overview-hero h1 {
@@ -504,6 +523,31 @@
 
   .calendar-side {
     position: static;
+  }
+}
+
+@media (max-width: 1320px) {
+  .filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .manager-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-detail {
+    position: static;
+  }
+
+  .manager-table-header,
+  .manager-row {
+    grid-template-columns: minmax(220px, 1.2fr) 120px minmax(130px, 0.8fr) minmax(130px, 0.8fr) 100px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .filters {
+    grid-template-columns: 1fr 1fr;
   }
 }
 

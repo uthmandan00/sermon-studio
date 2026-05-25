@@ -45,7 +45,9 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at 34% 0%, rgba(15, 107, 53, 0.045), transparent 34%), var(--bg);
+  background:
+    radial-gradient(circle at 28% 0%, rgba(15, 107, 53, 0.05), transparent 32%),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 38%, var(--bg)), var(--bg) 260px);
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 16px;
@@ -85,7 +87,7 @@ button {
   top: 0;
   height: 100vh;
   padding: 26px 14px;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 96%, var(--surface-2));
   border-right: 1px solid var(--line);
   overflow-y: auto;
 }
@@ -188,12 +190,17 @@ button {
   font-size: 0.92rem;
   font-weight: 800;
   text-align: left;
+  transition: background 120ms ease, color 120ms ease, transform 120ms ease;
 }
 
 .nav-link:hover,
 .nav-link.active {
   background: color-mix(in srgb, var(--accent) 10%, white);
   color: #064b25;
+}
+
+.nav-link:hover {
+  transform: translateX(1px);
 }
 
 [data-theme="dark"] .nav-link:hover,
@@ -208,6 +215,7 @@ button {
   width: 24px;
   height: 24px;
   border-radius: 7px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
   color: var(--accent-2);
   font-size: 0.76rem;
   font-weight: 900;
@@ -443,7 +451,7 @@ kbd {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: none;
+  box-shadow: 0 10px 30px rgba(24, 43, 34, 0.035);
 }
 
 .panel {
@@ -457,6 +465,10 @@ kbd {
   align-items: center;
   min-height: 116px;
   background: linear-gradient(135deg, color-mix(in srgb, var(--stat-color, var(--accent)) 8%, white), white);
+}
+
+[data-theme="dark"] .stat {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--stat-color, var(--accent)) 12%, var(--surface)), var(--surface));
 }
 
 .stat strong {
@@ -566,6 +578,7 @@ kbd {
 .btn:hover,
 .icon-btn:hover,
 .round-action:hover {
+  transform: translateY(-1px);
   border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
   background: color-mix(in srgb, var(--accent) 7%, var(--surface));
 }
@@ -593,6 +606,7 @@ kbd {
   border-radius: 10px;
   background: white;
   color: var(--ink);
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
 }
 
 [data-theme="dark"] .input,

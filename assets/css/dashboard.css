@@ -46,6 +46,12 @@
   box-shadow: var(--shadow);
 }
 
+[data-theme="dark"] .current-series-card {
+  background:
+    linear-gradient(120deg, color-mix(in srgb, var(--surface) 92%, transparent), color-mix(in srgb, var(--surface) 62%, transparent)),
+    linear-gradient(145deg, #16221b, #21362a 44%, #536a55);
+}
+
 .current-series-card::before {
   content: "";
   position: absolute;
@@ -122,6 +128,10 @@
   align-items: center;
   margin-top: 22px;
   background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 8%, white), white);
+}
+
+[data-theme="dark"] .readiness-strip {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, var(--surface)), var(--surface));
 }
 
 .readiness-strip h2 {
@@ -222,6 +232,12 @@
   text-align: left;
 }
 
+.quick-access a:hover,
+.quick-access button:hover,
+.insight-item:hover {
+  transform: translateY(-1px);
+}
+
 .quick-access span {
   display: grid;
   place-items: center;
@@ -287,6 +303,10 @@
 .insight-item:hover {
   border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
   background: color-mix(in srgb, var(--accent) 5%, white);
+}
+
+[data-theme="dark"] .insight-item:hover {
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
 }
 
 .focus-panel h2 {

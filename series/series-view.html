@@ -11,14 +11,15 @@
   <div class="app-shell">
     <aside class="sidebar rooted-sidebar" aria-label="Primary navigation">
       <a class="brand rooted-brand" href="../index.html"><span class="leaf-mark" aria-hidden="true"></span><span><strong class="app-name">Sermon Studio</strong><span class="app-subtitle">Sermon Manager</span></span></a>
-      <nav class="nav-section"><p class="nav-title">Main</p><a class="nav-link" href="../index.html"><span class="nav-icon">H</span>Dashboard</a><a class="nav-link" href="../sermons/index.html"><span class="nav-icon">B</span>Sermons</a><a class="nav-link" href="index.html"><span class="nav-icon">S</span>Series</a><a class="nav-link" href="../calendar/index.html"><span class="nav-icon">C</span>Calendar</a><a class="nav-link" href="../settings/index.html"><span class="nav-icon">G</span>Settings</a></nav>
+      <nav class="nav-section"><p class="nav-title">Main</p><a class="nav-link" href="../index.html"><span class="nav-icon">H</span>Dashboard</a><a class="nav-link" href="../sermons/index.html"><span class="nav-icon">B</span>Sermons</a><a class="nav-link" href="index.html"><span class="nav-icon">S</span>Series</a><a class="nav-link" href="../calendar/index.html"><span class="nav-icon">C</span>Calendar</a><a class="nav-link" href="../sermons/index.html?focus=search"><span class="nav-icon">Q</span>Search</a><a class="nav-link" href="../settings/index.html"><span class="nav-icon">G</span>Settings</a></nav>
+      <nav class="nav-section"><p class="nav-title">Create New</p><a class="nav-link" href="../sermons/sermon-editor.html"><span class="nav-icon nav-plus">+</span>New Sermon</a><a class="nav-link" href="index.html"><span class="nav-icon nav-plus">+</span>New Series</a></nav>
       <div class="nav-section"><p class="nav-title">Data</p><button class="nav-link btn-ghost" id="backup-export" type="button"><span class="nav-icon">E</span>Export Backup</button><label class="nav-link" for="backup-import"><span class="nav-icon">I</span>Import Backup</label><input class="sr-only" id="backup-import" type="file" accept="application/json"></div>
       <div class="pastor-card"><div class="avatar">PJ</div><div><strong class="pastor-name">Pastor Jonathan</strong><span class="church-name">Grace City Church</span></div></div>
     </aside>
     <main class="main">
       <header class="topbar">
         <div class="topbar-left"><button class="menu-icon menu-toggle" type="button" aria-expanded="false" aria-label="Open menu"><span></span><span></span><span></span></button><strong>Series Overview</strong></div>
-        <button class="round-action theme-toggle" type="button" aria-label="Toggle theme">T</button>
+        <div class="topbar-actions"><label class="search-shell"><span aria-hidden="true">Q</span><input id="global-search" type="search" placeholder="Search sermons..."><kbd>Ctrl K</kbd></label><button class="round-action theme-toggle" type="button" aria-label="Toggle theme">T</button></div>
       </header>
       <div class="page" id="series-view"></div>
     </main>

@@ -240,9 +240,18 @@
   font-weight: 850;
 }
 
+[data-theme="dark"] .prep-ok {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+}
+
 .prep-warning {
   background: color-mix(in srgb, var(--gold) 13%, white);
   color: #765017;
+}
+
+[data-theme="dark"] .prep-warning {
+  background: color-mix(in srgb, var(--gold) 16%, var(--surface));
+  color: var(--gold);
 }
 
 .prep-warning ul {

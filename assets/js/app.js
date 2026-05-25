@@ -11,7 +11,10 @@ function setActiveNavigation() {
     const normalized = linkUrl.pathname.replace(/\\/g, "/");
     const samePath = normalized === path || (path.endsWith("/") && normalized.endsWith("/index.html"));
     const linkFocus = linkUrl.searchParams.get("focus");
-    link.classList.toggle("active", samePath && (linkFocus ? linkFocus === currentFocus : !currentFocus));
+    const sectionIndex = normalized.match(/\/(sermons|series|calendar|settings)\/index\.html$/);
+    const isMainNav = link.closest(".nav-section")?.querySelector(".nav-title")?.textContent.trim() === "Main";
+    const sameSection = isMainNav && sectionIndex && path.includes(`/${sectionIndex[1]}/`);
+    link.classList.toggle("active", (samePath || sameSection) && (linkFocus ? linkFocus === currentFocus : !currentFocus));
   });
 }
 

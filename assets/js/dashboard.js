@@ -61,6 +61,15 @@ function getNextSermon(data) {
   return upcoming.find((sermon) => new Date(`${sermon.datePreached}T23:59:59`) >= new Date()) || upcoming[0];
 }
 
+function setPreachingLinks(data) {
+  const next = getNextSermon(data);
+  const href = next ? `sermons/sermon-view.html?id=${next.id}&mode=preach` : "sermons/index.html";
+  ["#top-preaching-link", "#hero-preaching-link"].forEach((selector) => {
+    const link = $(selector);
+    if (link) link.href = href;
+  });
+}
+
 function renderReadinessStrip(data) {
   const target = $("#readiness-strip");
   if (!target) return;
@@ -211,6 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("#weekly-focus-text").textContent = profile.weeklyFocus || "Faithful preparation leads to powerful proclamation.";
   }
   renderStats(data);
+  setPreachingLinks(data);
   renderCurrentSeries(data);
   renderReadinessStrip(data);
   renderSchedule(data);
