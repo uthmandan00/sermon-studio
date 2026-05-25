@@ -304,9 +304,25 @@ function applyParsedSermon(parsed) {
   renderScriptureBlocks(parsed.scriptureBlocks);
   setValue("prep-manuscript", Boolean(parsed.outline.length && parsed.introduction && parsed.conclusion));
   updateMetrics();
+  renderImportResult(parsed);
   setEditorMode("write");
-  scheduleAutosave();
-  toast(`Built "${parsed.title}" from pasted manuscript.`);
+  save({ quiet: true });
+  toast(`Built and saved "${parsed.title}".`);
+}
+
+function renderImportResult(parsed) {
+  const target = $("#import-result");
+  if (!target) return;
+  target.hidden = false;
+  target.innerHTML = `
+    <strong>Last import</strong>
+    <ul>
+      <li>${escapeHtml(parsed.title || "Untitled sermon")}</li>
+      <li>${escapeHtml(parsed.mainScripture || "No main scripture")}</li>
+      <li>${parsed.outline.length} main points</li>
+      <li>${parsed.scriptureBlocks.length} scripture blocks</li>
+    </ul>
+  `;
 }
 
 function updateMetrics() {
@@ -482,6 +498,10 @@ function bindEditor() {
     } catch (error) {
       toast(error.message || "Could not parse that sermon.", "error");
     }
+  });
+  $("#clear-manuscript-paste")?.addEventListener("click", () => {
+    setValue("manuscript-paste", "");
+    toast("Paste field cleared.");
   });
   $("#focus-mode").addEventListener("click", () => document.body.classList.toggle("writing-focus"));
   $("#focus-mode-top")?.addEventListener("click", () => document.body.classList.toggle("writing-focus"));

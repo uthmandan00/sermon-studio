@@ -45,6 +45,7 @@
               <div><span id="speaking-time">0</span> min</div>
               <div><span id="character-count">0</span> characters</div>
             </div>
+            <div class="visually-separated import-result" id="import-result" hidden></div>
             <div class="visually-separated builder-export-list">
               <strong>Outputs</strong>
               <button class="btn" id="copy-notes-panel" type="button">Copy Manuscript</button>
@@ -67,12 +68,15 @@
                     <p class="eyebrow">Fast start</p>
                     <h2>Paste a Full Sermon</h2>
                   </div>
-                  <button class="btn btn-primary" id="parse-manuscript" type="button">Build Sermon</button>
                 </div>
                 <label class="field">
                   <span>Paste your normal sermon format here</span>
-                  <textarea class="textarea manuscript-paste" id="manuscript-paste" placeholder="“DON’T GO BACK”&#10;John 8:1–11&#10;INTRODUCTION&#10;&#10;..."></textarea>
+                  <textarea class="textarea manuscript-paste" id="manuscript-paste" placeholder="DON'T GO BACK&#10;John 8:1-11&#10;INTRODUCTION&#10;&#10;..."></textarea>
                 </label>
+                <div class="button-row import-actions">
+                  <button class="btn btn-primary" id="parse-manuscript" type="button">Build Sermon</button>
+                  <button class="btn" id="clear-manuscript-paste" type="button">Clear Paste</button>
+                </div>
               </div>
             </section>
             <details class="card editor-section" id="basic" data-mode="plan" open>
