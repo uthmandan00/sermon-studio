@@ -3,6 +3,8 @@ import { filterSermons, getSearchState, renderFilterOptions, renderRecentSearche
 import { $, $$, calculateSermonMetrics, confirmAction, createId, escapeHtml, formatDate, formatDateTime, normalizeList, nowIso, prepProgress, readinessReview, toast } from "./utils.js";
 
 let selectedSermonId = "";
+const VIEW_KEY = "sermon-library-view";
+const workflowStatuses = ["Planning", "Drafting", "Editing", "Ready", "Preached", "Archived"];
 const scriptureReferencePattern = /\b(?:[1-3]\s*)?[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\s+\d+:\d+(?:[\u2013-]\d+)?/g;
 const singleScriptureReferencePattern = /\b(?:[1-3]\s*)?[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\s+\d+:\d+(?:[\u2013-]\d+)?/;
 const romanPointPattern = /^(I|II|III|IV|V|VI|VII|VIII|IX|X)\.\s+(.+)$/i;
@@ -82,11 +84,67 @@ function renderSermonList(data, sermons) {
   renderDetailPane(data, sermons.find((sermon) => sermon.id === selectedSermonId));
 }
 
+function renderWorkflowBoard(data, sermons) {
+  const target = $("#workflow-board");
+  if (!target) return;
+  if (!sermons.length) {
+    target.innerHTML = `<div class="empty-state card"><h2>No sermons on the board.</h2><p class="muted">Adjust your filters or start a new sermon.</p><a class="btn btn-primary" href="sermon-editor.html">New Sermon</a></div>`;
+    return;
+  }
+  target.innerHTML = workflowStatuses.map((status) => {
+    const items = sermons.filter((sermon) => sermon.status === status);
+    return `
+      <section class="workflow-column" data-status="${status}" aria-label="${status} sermons">
+        <header>
+          <span class="status status-${status.toLowerCase()}">${status}</span>
+          <strong>${items.length}</strong>
+        </header>
+        <div class="workflow-dropzone">
+          ${items.length ? items.map((sermon) => {
+            const metrics = calculateSermonMetrics(sermon);
+            const progress = prepProgress(sermon).percent;
+            return `
+              <article class="workflow-card" draggable="true" data-id="${sermon.id}" tabindex="0">
+                <strong>${escapeHtml(sermon.title || "Untitled sermon")}</strong>
+                <span>${escapeHtml(sermon.mainScripture || "No scripture")} - ${escapeHtml(seriesTitle(data, sermon.seriesId))}</span>
+                <div class="workflow-meta">
+                  <small>${formatDate(sermon.datePreached)}</small>
+                  <small>${metrics.speakingMinutes} min</small>
+                </div>
+                <div class="prep-progress" aria-label="${progress}% preparation complete"><span style="width:${progress}%"></span></div>
+                <div class="workflow-actions">
+                  <a class="btn" href="sermon-editor.html?id=${sermon.id}">Open</a>
+                  <a class="btn" href="sermon-view.html?id=${sermon.id}&mode=preach">Preach</a>
+                </div>
+              </article>
+            `;
+          }).join("") : `<div class="workflow-empty">Drop sermons here</div>`}
+        </div>
+      </section>
+    `;
+  }).join("");
+}
+
+function setLibraryView(view = "board") {
+  const safeView = view === "library" ? "library" : "board";
+  localStorage.setItem(VIEW_KEY, safeView);
+  $$(".view-toggle").forEach((button) => {
+    const isActive = button.dataset.view === safeView;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+  $("#workflow-board")?.classList.toggle("view-hidden", safeView !== "board");
+  $("#library-view")?.classList.toggle("view-hidden", safeView !== "library");
+}
+
 function rerender() {
   const data = loadData();
   const state = getSearchState();
-  renderSermonList(data, filterSermons(data, state));
+  const sermons = filterSermons(data, state);
+  renderWorkflowBoard(data, sermons);
+  renderSermonList(data, sermons);
   renderRecentSearches(data);
+  setLibraryView(localStorage.getItem(VIEW_KEY) || "board");
 }
 
 function cleanTitle(value = "") {
@@ -219,9 +277,21 @@ async function importWordDocuments() {
 
 function bindActions() {
   document.addEventListener("click", (event) => {
+    const viewToggle = event.target.closest(".view-toggle");
+    if (viewToggle) {
+      setLibraryView(viewToggle.dataset.view);
+      return;
+    }
     const row = event.target.closest(".manager-row");
     if (row) {
       selectedSermonId = row.dataset.id;
+      rerender();
+      return;
+    }
+    const workflowCard = event.target.closest(".workflow-card");
+    if (workflowCard && !event.target.closest("a, button")) {
+      selectedSermonId = workflowCard.dataset.id;
+      setLibraryView("library");
       rerender();
       return;
     }
@@ -259,6 +329,36 @@ function bindActions() {
     selectedSermonId = row.dataset.id;
     rerender();
   });
+  $("#workflow-board")?.addEventListener("dragstart", (event) => {
+    const card = event.target.closest(".workflow-card");
+    if (!card) return;
+    event.dataTransfer.setData("text/plain", card.dataset.id);
+    card.classList.add("dragging");
+  });
+  $("#workflow-board")?.addEventListener("dragend", (event) => {
+    event.target.closest(".workflow-card")?.classList.remove("dragging");
+  });
+  $("#workflow-board")?.addEventListener("dragover", (event) => {
+    if (!event.target.closest(".workflow-column")) return;
+    event.preventDefault();
+    event.target.closest(".workflow-column").classList.add("drag-over");
+  });
+  $("#workflow-board")?.addEventListener("dragleave", (event) => {
+    event.target.closest(".workflow-column")?.classList.remove("drag-over");
+  });
+  $("#workflow-board")?.addEventListener("drop", (event) => {
+    const column = event.target.closest(".workflow-column");
+    if (!column) return;
+    event.preventDefault();
+    column.classList.remove("drag-over");
+    const sermonId = event.dataTransfer.getData("text/plain");
+    const data = loadData();
+    const sermon = data.sermons.find((item) => item.id === sermonId);
+    if (!sermon || sermon.status === column.dataset.status) return;
+    upsertSermon({ ...sermon, status: column.dataset.status, archived: column.dataset.status === "Archived" });
+    toast(`Moved ${sermon.title || "sermon"} to ${column.dataset.status}.`);
+    rerender();
+  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -269,8 +369,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if (initialQuery && searchInput) searchInput.value = initialQuery;
   if (params.get("focus") === "search" && searchInput) window.setTimeout(() => searchInput.focus(), 80);
   renderFilterOptions(data);
-  renderSermonList(data, filterSermons(data, getSearchState()));
+  const sermons = filterSermons(data, getSearchState());
+  renderWorkflowBoard(data, sermons);
+  renderSermonList(data, sermons);
   renderRecentSearches(data);
+  setLibraryView(localStorage.getItem(VIEW_KEY) || "board");
   $$(".filters input, .filters select").forEach((control) => {
     control.addEventListener("input", () => {
       saveRecentSearch($("#search-query")?.value.trim());

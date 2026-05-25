@@ -61,8 +61,16 @@
           <label class="field"><span>Sort</span><select class="select" id="sort-sermons"><option value="updated">Recently edited</option><option value="date">Newest date</option><option value="title">Alphabetical</option></select></label>
         </section>
         <div class="tag-row" id="recent-searches" aria-label="Recent searches"></div>
-        <div class="section-heading"><h2 id="search-summary">Sermons found</h2><a class="btn" href="../calendar/index.html">Schedule</a></div>
-        <section class="manager-layout">
+        <div class="section-heading">
+          <h2 id="search-summary">Sermons found</h2>
+          <div class="library-view-switch" aria-label="Sermon view">
+            <button class="view-toggle active" type="button" data-view="board">Prep Board</button>
+            <button class="view-toggle" type="button" data-view="library">Library</button>
+          </div>
+          <a class="btn" href="../calendar/index.html">Schedule</a>
+        </div>
+        <section class="workflow-board" id="workflow-board" aria-label="Sermon preparation board"></section>
+        <section class="manager-layout view-hidden" id="library-view">
           <div class="card manager-table-card">
             <div class="manager-table-header" role="row">
               <span>Title</span>

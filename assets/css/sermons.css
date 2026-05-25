@@ -54,6 +54,125 @@
   border-color: color-mix(in srgb, var(--danger) 35%, var(--line));
 }
 
+.library-view-switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.view-toggle {
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.view-toggle.active {
+  background: var(--accent);
+  color: white;
+}
+
+.view-hidden {
+  display: none !important;
+}
+
+.workflow-board {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(230px, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.workflow-column {
+  min-height: 520px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface) 88%, var(--surface-2));
+}
+
+.workflow-column.drag-over {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+}
+
+.workflow-column header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.workflow-dropzone {
+  display: grid;
+  gap: 10px;
+  min-height: 430px;
+}
+
+.workflow-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 10px 24px rgba(24, 43, 34, 0.05);
+  cursor: grab;
+}
+
+.workflow-card:active {
+  cursor: grabbing;
+}
+
+.workflow-card.dragging {
+  opacity: 0.55;
+}
+
+.workflow-card strong,
+.workflow-card span,
+.workflow-card small {
+  display: block;
+}
+
+.workflow-card span,
+.workflow-card small {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.workflow-meta,
+.workflow-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.workflow-actions .btn {
+  min-height: 32px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+}
+
+.workflow-empty {
+  display: grid;
+  min-height: 110px;
+  place-items: center;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  color: var(--muted);
+  font-weight: 850;
+}
+
 .sermon-card {
   position: relative;
   border: 1px solid var(--line);
@@ -654,5 +773,17 @@
 
   .word-import-drop {
     grid-template-columns: 1fr;
+  }
+
+  .workflow-board {
+    grid-template-columns: minmax(260px, 88vw);
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(260px, 88vw);
+  }
+
+  .library-view-switch {
+    order: 3;
+    width: 100%;
+    justify-content: center;
   }
 }
