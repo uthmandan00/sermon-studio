@@ -5,6 +5,7 @@ const outlineTypes = ["Main Point", "Subpoint", "Illustration", "Application", "
 let currentSermon = null;
 let autosaveTimer = null;
 const SIMPLE_VIEW_KEY = "sermon-builder-simple-view";
+const PREACHING_PREFS_KEY = "sermon-preaching-preferences-v1";
 const modeText = {
   plan: ["Plan", "Set the sermon metadata, series placement, and core passage."],
   manuscript: ["Manuscript", "Write and edit the full sermon in your normal preaching format."],
@@ -506,6 +507,25 @@ function audioHtml(audio = {}) {
   `;
 }
 
+function getPreachingPrefs() {
+  try {
+    return {
+      size: 30,
+      lineHeight: 1.6,
+      width: 980,
+      theme: "dark",
+      paging: false,
+      ...JSON.parse(localStorage.getItem(PREACHING_PREFS_KEY) || "{}")
+    };
+  } catch {
+    return { size: 30, lineHeight: 1.6, width: 980, theme: "dark", paging: false };
+  }
+}
+
+function savePreachingPrefs(prefs) {
+  localStorage.setItem(PREACHING_PREFS_KEY, JSON.stringify(prefs));
+}
+
 function manuscriptHtml(text = "") {
   return text.split(/\n+/).map((line) => {
     const trimmed = line.trim();
@@ -520,6 +540,20 @@ function manuscriptHtml(text = "") {
     scriptureReferencePattern.lastIndex = 0;
     return `<p>${escapeHtml(trimmed)}</p>`;
   }).join("");
+}
+
+function sermonPreachingHtml(sermon) {
+  if (sermon.manuscriptDraft) return manuscriptHtml(sermon.manuscriptDraft);
+  return `
+    <h1>${escapeHtml(sermon.title)}</h1>
+    <p>${escapeHtml(sermon.subtitle || "")}</p>
+    ${(sermon.scriptureBlocks || []).map((block) => `<div class="scripture-highlight"><strong>${escapeHtml(block.reference)}</strong><p>${escapeHtml(block.text)}</p></div>`).join("")}
+    <h2>Big Idea</h2><p>${escapeHtml(sermon.bigIdea || "")}</p>
+    <h2>Introduction</h2><p>${escapeHtml(sermon.introduction || "")}</p>
+    ${(sermon.outline || []).map((block) => `<h2>${escapeHtml(block.title || block.type)}</h2><p><em>${escapeHtml(block.type)}</em></p><p>${escapeHtml(block.body || "")}</p>`).join("")}
+    <h2>Conclusion</h2><p>${escapeHtml(sermon.conclusion || "")}</p>
+    <h2>Invitation / Response</h2><p>${escapeHtml(sermon.invitation || "")}</p>
+  `;
 }
 
 function renderOutputPreview() {
@@ -667,43 +701,125 @@ function bindEditor() {
 function renderPreachingView(sermon) {
   document.body.className = "preaching-body";
   const metrics = calculateSermonMetrics(sermon);
+  const prefs = getPreachingPrefs();
   document.body.innerHTML = `
-    <main class="preaching-shell">
+    <main class="preaching-shell" style="--preach-width:${prefs.width}px; --preach-size:${prefs.size}px; --preach-line:${prefs.lineHeight};">
       <div class="preaching-toolbar no-print">
-        <div class="button-row">
+        <div class="preaching-toolbar-row">
           <a class="btn" href="sermon-editor.html?id=${sermon.id}">Exit</a>
+          <select class="select preaching-nav" id="preach-nav" aria-label="Jump to section"></select>
+          <button class="btn" id="prev-section" type="button">Previous</button>
+          <button class="btn" id="next-section" type="button">Next</button>
+        </div>
+        <div class="preaching-toolbar-row">
           <button class="btn" id="size-down" type="button">A-</button>
           <button class="btn" id="size-up" type="button">A+</button>
+          <button class="btn" id="line-toggle" type="button">Line</button>
+          <button class="btn" id="width-toggle" type="button">Width</button>
+          <button class="btn" id="paging-toggle" type="button">${prefs.paging ? "Scroll" : "Pages"}</button>
+          <button class="btn" id="preach-theme" type="button">${prefs.theme === "dark" ? "Light" : "Dark"}</button>
+          <button class="btn" id="wake-lock" type="button">Keep Awake</button>
           <button class="btn" id="timer-toggle" type="button">Start Timer</button>
+          <button class="btn" id="timer-reset" type="button">Reset</button>
         </div>
         <strong id="timer">00:00</strong>
       </div>
-      <article class="preaching-content">
-        <p><strong>${escapeHtml(sermon.mainScripture || "")}</strong> - ${metrics.speakingMinutes} min estimated</p>
-        ${sermon.manuscriptDraft ? manuscriptHtml(sermon.manuscriptDraft) : `
-          <h1>${escapeHtml(sermon.title)}</h1>
-          <p>${escapeHtml(sermon.subtitle || "")}</p>
-          ${(sermon.scriptureBlocks || []).map((block) => `<div class="scripture-highlight"><strong>${escapeHtml(block.reference)}</strong><p>${escapeHtml(block.text)}</p></div>`).join("")}
-          <h2>Big Idea</h2><p>${escapeHtml(sermon.bigIdea || "")}</p>
-          <h2>Introduction</h2><p>${escapeHtml(sermon.introduction || "")}</p>
-          ${(sermon.outline || []).map((block) => `<h2>${escapeHtml(block.title || block.type)}</h2><p><em>${escapeHtml(block.type)}</em></p><p>${escapeHtml(block.body || "")}</p>`).join("")}
-          <h2>Conclusion</h2><p>${escapeHtml(sermon.conclusion || "")}</p>
-          <h2>Invitation / Response</h2><p>${escapeHtml(sermon.invitation || "")}</p>
-        `}
+      <div class="preaching-progress no-print"><span id="preach-progress"></span></div>
+      <article class="preaching-content ${prefs.paging ? "paged" : ""}" id="preaching-content">
+        <p class="preaching-meta"><strong>${escapeHtml(sermon.mainScripture || sermon.title || "")}</strong> <span>${metrics.words} words / ${metrics.speakingMinutes} min</span></p>
+        ${sermonPreachingHtml(sermon)}
         ${audioHtml(sermon.audio)}
       </article>
     </main>
   `;
-  let size = 28;
+  document.body.classList.toggle("preaching-light", prefs.theme === "light");
+  let activePrefs = { ...prefs };
   let timer = 0;
   let timerId = null;
+  let wakeLock = null;
+  const content = $("#preaching-content");
+  const headings = $$("h1, h2", content);
+  headings.forEach((heading, index) => {
+    heading.id = `preach-section-${index}`;
+  });
+  $("#preach-nav").innerHTML = headings.map((heading, index) => `<option value="${heading.id}">${escapeHtml(heading.textContent.trim() || `Section ${index + 1}`)}</option>`).join("");
+  const applyPrefs = () => {
+    document.querySelector(".preaching-shell").style.setProperty("--preach-width", `${activePrefs.width}px`);
+    document.querySelector(".preaching-shell").style.setProperty("--preach-size", `${activePrefs.size}px`);
+    document.querySelector(".preaching-shell").style.setProperty("--preach-line", activePrefs.lineHeight);
+    content.classList.toggle("paged", activePrefs.paging);
+    $("#paging-toggle").textContent = activePrefs.paging ? "Scroll" : "Pages";
+    document.body.classList.toggle("preaching-light", activePrefs.theme === "light");
+    $("#preach-theme").textContent = activePrefs.theme === "dark" ? "Light" : "Dark";
+    savePreachingPrefs(activePrefs);
+  };
+  const currentSectionIndex = () => {
+    const current = headings.reduce((latest, heading, index) => heading.getBoundingClientRect().top <= 140 ? index : latest, 0);
+    return Math.max(0, current);
+  };
+  const goToSection = (index) => {
+    const heading = headings[Math.max(0, Math.min(headings.length - 1, index))];
+    if (!heading) return;
+    heading.scrollIntoView({ behavior: "smooth", block: "start" });
+    $("#preach-nav").value = heading.id;
+  };
+  const updateProgress = () => {
+    const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    $("#preach-progress").style.width = `${Math.min(100, Math.max(0, (window.scrollY / max) * 100))}%`;
+    const current = headings[currentSectionIndex()];
+    if (current) $("#preach-nav").value = current.id;
+  };
   $("#size-up").addEventListener("click", () => {
-    size = Math.min(44, size + 2);
-    document.documentElement.style.setProperty("--preach-size", `${size}px`);
+    activePrefs.size = Math.min(48, activePrefs.size + 2);
+    applyPrefs();
   });
   $("#size-down").addEventListener("click", () => {
-    size = Math.max(20, size - 2);
-    document.documentElement.style.setProperty("--preach-size", `${size}px`);
+    activePrefs.size = Math.max(20, activePrefs.size - 2);
+    applyPrefs();
+  });
+  $("#line-toggle").addEventListener("click", () => {
+    activePrefs.lineHeight = activePrefs.lineHeight >= 1.8 ? 1.45 : Number((activePrefs.lineHeight + 0.15).toFixed(2));
+    applyPrefs();
+  });
+  $("#width-toggle").addEventListener("click", () => {
+    activePrefs.width = activePrefs.width >= 1180 ? 820 : activePrefs.width + 180;
+    applyPrefs();
+  });
+  $("#paging-toggle").addEventListener("click", () => {
+    activePrefs.paging = !activePrefs.paging;
+    applyPrefs();
+  });
+  $("#preach-theme").addEventListener("click", () => {
+    activePrefs.theme = activePrefs.theme === "dark" ? "light" : "dark";
+    applyPrefs();
+  });
+  $("#preach-nav").addEventListener("change", () => {
+    document.getElementById($("#preach-nav").value)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  $("#prev-section").addEventListener("click", () => goToSection(currentSectionIndex() - 1));
+  $("#next-section").addEventListener("click", () => goToSection(currentSectionIndex() + 1));
+  $("#timer-reset").addEventListener("click", () => {
+    timer = 0;
+    $("#timer").textContent = "00:00";
+  });
+  $("#wake-lock").addEventListener("click", async () => {
+    try {
+      if (wakeLock) {
+        await wakeLock.release();
+        wakeLock = null;
+        $("#wake-lock").textContent = "Keep Awake";
+        return;
+      }
+      if (!("wakeLock" in navigator)) throw new Error("Wake lock is not supported in this browser.");
+      wakeLock = await navigator.wakeLock.request("screen");
+      $("#wake-lock").textContent = "Awake On";
+      wakeLock.addEventListener("release", () => {
+        wakeLock = null;
+        $("#wake-lock").textContent = "Keep Awake";
+      });
+    } catch (error) {
+      $("#wake-lock").textContent = "Unavailable";
+    }
   });
   $("#timer-toggle").addEventListener("click", () => {
     if (timerId) {
@@ -718,6 +834,15 @@ function renderPreachingView(sermon) {
       $("#timer").textContent = `${String(Math.floor(timer / 60)).padStart(2, "0")}:${String(timer % 60).padStart(2, "0")}`;
     }, 1000);
   });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowRight" || event.key === "PageDown") goToSection(currentSectionIndex() + 1);
+    if (event.key === "ArrowLeft" || event.key === "PageUp") goToSection(currentSectionIndex() - 1);
+    if (event.key === "+") $("#size-up").click();
+    if (event.key === "-") $("#size-down").click();
+  });
+  window.addEventListener("scroll", updateProgress, { passive: true });
+  applyPrefs();
+  updateProgress();
 }
 
 function renderReadOnly(sermon) {
