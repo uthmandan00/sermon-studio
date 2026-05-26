@@ -16,6 +16,7 @@ const APP_SHELL = [
   "/assets/css/sermons.css",
   "/assets/css/editor.css",
   "/assets/js/app.js",
+  "/assets/js/cloud.js",
   "/assets/js/storage.js",
   "/assets/js/utils.js",
   "/assets/js/search.js",

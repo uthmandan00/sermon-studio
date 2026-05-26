@@ -19,7 +19,7 @@
     <main class="main">
       <header class="topbar">
         <div class="topbar-left"><button class="menu-icon menu-toggle" type="button" aria-expanded="false" aria-label="Open menu"><span></span><span></span><span></span></button><strong>Settings</strong></div>
-        <div class="topbar-actions"><label class="search-shell"><span aria-hidden="true">Q</span><input id="global-search" type="search" placeholder="Search sermons..."><kbd>Ctrl K</kbd></label><button class="round-action theme-toggle" type="button" aria-label="Toggle theme">T</button></div>
+        <div class="topbar-actions"><label class="search-shell"><span aria-hidden="true">Q</span><input id="global-search" type="search" placeholder="Search sermons..."><kbd>Ctrl K</kbd></label><a class="status cloud-status" href="#cloud-sync">Local Only</a><button class="round-action theme-toggle" type="button" aria-label="Toggle theme">T</button></div>
       </header>
       <div class="page">
         <section class="hero">
@@ -34,6 +34,36 @@
         </section>
 
         <section class="grid grid-4" id="storage-health"></section>
+
+        <section class="card panel cloud-panel" id="cloud-sync">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Cloud Sync</p>
+              <h2>Supabase Sign-in and Backup</h2>
+            </div>
+            <span class="status" id="cloud-state">Local Only</span>
+          </div>
+          <p class="muted">Connect a Supabase project to sync this browser's sermons to a private cloud workspace. Local data stays available even when cloud sync is off.</p>
+          <form class="form-grid visually-separated" id="cloud-config-form">
+            <label class="field"><span>Supabase Project URL</span><input class="input" id="cloud-url" type="url" placeholder="https://your-project.supabase.co"></label>
+            <label class="field"><span>Anon / Publishable Key</span><input class="input" id="cloud-anon-key" autocomplete="off" placeholder="Paste public anon key"></label>
+            <label class="field"><span>Email</span><input class="input" id="cloud-email" type="email" autocomplete="email"></label>
+            <label class="field"><span>Password</span><input class="input" id="cloud-password" type="password" autocomplete="current-password" minlength="6"></label>
+            <label class="field full"><span><input id="cloud-enabled" type="checkbox"> Enable cloud sync after saves</span></label>
+            <div class="button-row full">
+              <button class="btn btn-primary" type="submit">Save Cloud Settings</button>
+              <button class="btn" id="cloud-sign-in" type="button">Sign In</button>
+              <button class="btn" id="cloud-sign-up" type="button">Create Account</button>
+              <button class="btn" id="cloud-sign-out" type="button">Sign Out</button>
+            </div>
+          </form>
+          <div class="button-row visually-separated">
+            <button class="btn btn-primary" id="cloud-push" type="button">Push Local to Cloud</button>
+            <button class="btn" id="cloud-pull" type="button">Pull Cloud to This Browser</button>
+            <a class="btn" href="../supabase-schema.sql">Download SQL Setup</a>
+          </div>
+          <p class="muted" id="cloud-message">Run the SQL setup in Supabase before first sync.</p>
+        </section>
 
         <section class="series-overview-grid">
           <form class="card panel form-grid" id="profile-form">

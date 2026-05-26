@@ -1,4 +1,5 @@
 import { $, $$, getTheme, setTheme, toast } from "./utils.js";
+import { getCloudStatus, getCloudUser, isCloudConfigured } from "./cloud.js";
 import { exportBackup, importBackup, loadData } from "./storage.js";
 
 function setActiveNavigation() {
@@ -116,6 +117,23 @@ function setupInstallMetadata() {
   }
 }
 
+async function setupCloudIndicator() {
+  const target = $(".cloud-status");
+  if (!target) return;
+  const render = (status = getCloudStatus()) => {
+    const configured = isCloudConfigured();
+    target.textContent = configured && status.signedIn ? "Cloud On" : configured ? "Cloud Ready" : "Local Only";
+    target.classList.toggle("cloud-on", Boolean(configured && status.signedIn));
+    target.title = status.lastMessage || (configured ? "Cloud sync configured." : "Cloud sync is not configured.");
+  };
+  render();
+  window.addEventListener("sermon-cloud-status", (event) => render(event.detail));
+  if (isCloudConfigured()) {
+    const user = await getCloudUser();
+    render({ ...getCloudStatus(), signedIn: Boolean(user), email: user?.email || "" });
+  }
+}
+
 function initialsFromName(name = "") {
   const parts = name.replace(/^pastor\s+/i, "").trim().split(/\s+/).filter(Boolean);
   return (parts[0]?.[0] || "P") + (parts[1]?.[0] || "");
@@ -140,6 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupMobileNav();
   setupBackupControls();
   setupInstallMetadata();
+  setupCloudIndicator();
   applyProfile();
   document.addEventListener("keydown", (event) => {
     const search = document.querySelector("#global-search, #search-query");

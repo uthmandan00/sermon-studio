@@ -1,4 +1,5 @@
-import { createSafetySnapshot, exportBackup, listSafetySnapshots, loadData, resetToSampleData, restoreSafetySnapshot, updateData } from "./storage.js";
+import { getCloudConfig, getCloudStatus, getCloudUser, pullWorkspaceFromCloud, pushWorkspaceToCloud, saveCloudConfig, signInToCloud, signOutOfCloud, signUpForCloud } from "./cloud.js";
+import { createSafetySnapshot, exportBackup, listSafetySnapshots, loadData, resetToSampleData, restoreSafetySnapshot, saveData, updateData } from "./storage.js";
 import { $, escapeHtml, formatDateTime, toast } from "./utils.js";
 
 const defaults = {
@@ -79,11 +80,65 @@ function renderSafetySnapshots() {
   `).join("") : `<p class="muted">No safety snapshots yet. The app creates them before destructive changes.</p>`;
 }
 
+function setCloudMessage(message, type = "note") {
+  const target = $("#cloud-message");
+  if (!target) return;
+  target.textContent = message;
+  target.classList.toggle("danger-text", type === "error");
+}
+
+function fillCloudSettings() {
+  const config = getCloudConfig();
+  const status = getCloudStatus();
+  $("#cloud-url").value = config.url || "";
+  $("#cloud-anon-key").value = config.anonKey || "";
+  $("#cloud-enabled").checked = Boolean(config.enabled);
+  $("#cloud-email").value = status.email || "";
+  renderCloudState(status);
+}
+
+function readCloudSettings() {
+  return {
+    url: $("#cloud-url").value,
+    anonKey: $("#cloud-anon-key").value,
+    enabled: $("#cloud-enabled").checked
+  };
+}
+
+function renderCloudState(status = getCloudStatus()) {
+  const configured = Boolean(getCloudConfig().url && getCloudConfig().anonKey && getCloudConfig().enabled);
+  const state = $("#cloud-state");
+  if (!state) return;
+  state.textContent = configured && status.signedIn ? "Cloud On" : configured ? "Cloud Ready" : "Local Only";
+  state.className = `status ${configured && status.signedIn ? "status-ready" : configured ? "status-planning" : ""}`;
+  if (status.lastMessage) setCloudMessage(status.lastMessage);
+  if (status.lastError) setCloudMessage(status.lastError, "error");
+}
+
+async function refreshCloudUser() {
+  try {
+    const user = await getCloudUser();
+    renderCloudState({ ...getCloudStatus(), signedIn: Boolean(user), email: user?.email || getCloudStatus().email || "" });
+  } catch {
+    renderCloudState();
+  }
+}
+
+function cloudCredentials() {
+  const email = $("#cloud-email").value.trim();
+  const password = $("#cloud-password").value;
+  if (!email || !password) throw new Error("Enter your email and password first.");
+  return { email, password };
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const data = loadData();
   setValues(data.meta.profile || defaults);
   renderStorageHealth(data);
   renderSafetySnapshots();
+  fillCloudSettings();
+  refreshCloudUser();
+  window.addEventListener("sermon-cloud-status", (event) => renderCloudState(event.detail));
   $("#profile-form").addEventListener("input", updatePreview);
   $("#profile-form").addEventListener("submit", (event) => {
     event.preventDefault();
@@ -100,6 +155,79 @@ document.addEventListener("DOMContentLoaded", () => {
     createSafetySnapshot("Manual safety backup");
     renderSafetySnapshots();
     toast("Safety backup created.");
+  });
+  $("#cloud-config-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveCloudConfig(readCloudSettings());
+    renderCloudState();
+    toast("Cloud settings saved.");
+    setCloudMessage("Cloud settings saved. Sign in, then push local data to cloud.");
+  });
+  $("#cloud-sign-in").addEventListener("click", async () => {
+    try {
+      saveCloudConfig(readCloudSettings());
+      const { email, password } = cloudCredentials();
+      await signInToCloud(email, password);
+      $("#cloud-password").value = "";
+      renderCloudState();
+      toast("Signed in to cloud sync.");
+    } catch (error) {
+      setCloudMessage(error.message || "Could not sign in.", "error");
+      toast("Could not sign in.", "error");
+    }
+  });
+  $("#cloud-sign-up").addEventListener("click", async () => {
+    try {
+      saveCloudConfig(readCloudSettings());
+      const { email, password } = cloudCredentials();
+      await signUpForCloud(email, password);
+      $("#cloud-password").value = "";
+      renderCloudState();
+      toast("Cloud account created. Check email if confirmation is required.");
+      setCloudMessage("Account created. If Supabase requires confirmation, check your email before signing in.");
+    } catch (error) {
+      setCloudMessage(error.message || "Could not create account.", "error");
+      toast("Could not create account.", "error");
+    }
+  });
+  $("#cloud-sign-out").addEventListener("click", async () => {
+    try {
+      await signOutOfCloud();
+      renderCloudState();
+      toast("Signed out of cloud sync.");
+    } catch (error) {
+      setCloudMessage(error.message || "Could not sign out.", "error");
+      toast("Could not sign out.", "error");
+    }
+  });
+  $("#cloud-push").addEventListener("click", async () => {
+    try {
+      saveCloudConfig(readCloudSettings());
+      await pushWorkspaceToCloud(loadData());
+      renderCloudState();
+      toast("Local workspace pushed to cloud.");
+    } catch (error) {
+      setCloudMessage(error.message || "Cloud push failed.", "error");
+      toast("Cloud push failed.", "error");
+    }
+  });
+  $("#cloud-pull").addEventListener("click", async () => {
+    try {
+      const confirmed = window.confirm("Pull cloud data into this browser? Your current local workspace will be saved as a safety backup first.");
+      if (!confirmed) return;
+      const row = await pullWorkspaceFromCloud();
+      if (!row?.data) {
+        setCloudMessage("No cloud workspace found yet. Push local data first.");
+        return;
+      }
+      createSafetySnapshot("Before pulling cloud workspace");
+      saveData(row.data);
+      toast("Cloud workspace pulled. Reloading.");
+      window.setTimeout(() => window.location.reload(), 500);
+    } catch (error) {
+      setCloudMessage(error.message || "Cloud pull failed.", "error");
+      toast("Cloud pull failed.", "error");
+    }
   });
   $("#safety-snapshots").addEventListener("click", (event) => {
     const restore = event.target.closest(".restore-snapshot");

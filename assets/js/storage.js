@@ -1,4 +1,5 @@
 import { sampleData } from "../data/sample-data.js";
+import { queueCloudSync } from "./cloud.js";
 import { createId, nowIso, sermonPlainText } from "./utils.js";
 
 const STORAGE_KEY = "sermon-manager-data-v1";
@@ -86,6 +87,7 @@ export function saveData(data) {
     sermons: Array.isArray(data.sermons) ? data.sermons : []
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(nextData));
+  queueCloudSync(nextData);
   return nextData;
 }
 

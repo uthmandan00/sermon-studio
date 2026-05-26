@@ -533,6 +533,26 @@ kbd {
   opacity: 0.75;
 }
 
+.cloud-status {
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.cloud-status.cloud-on {
+  border-color: color-mix(in srgb, var(--success) 28%, var(--line));
+  background: color-mix(in srgb, var(--success) 13%, white);
+  color: var(--success);
+}
+
+.cloud-panel {
+  margin-bottom: 22px;
+}
+
+.danger-text {
+  color: var(--danger);
+  font-weight: 850;
+}
+
 .btn,
 .icon-btn {
   display: inline-flex;
