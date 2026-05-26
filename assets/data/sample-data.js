@@ -1,6 +1,6 @@
 export const sampleData = {
   meta: {
-    version: 6,
+    version: 7,
     profile: {
       appName: "Sermon Studio",
       appSubtitle: "Sermon Manager",
@@ -90,6 +90,12 @@ export const sampleData = {
       researchNotes: "Compare Psalm 69 with Jonah 2 and Matthew's sea narratives.",
       commentaryReferences: "Kidner on Psalms; Goldingay, Psalms Volume 2.",
       prayerNotes: "Pray for people carrying private panic.",
+      audio: {
+        title: "When the Waters Rise - Sunday Audio",
+        url: "",
+        recordedAt: "2026-06-07",
+        notes: "Add the hosted MP3 or podcast link here after the service."
+      },
       outputNotes: {
         handout: "Leave space for people to write one honest prayer of lament.",
         slides: "Use a simple water image, then one slide for each movement: Name, Pray, Hope.",
@@ -166,6 +172,12 @@ export const sampleData = {
       researchNotes: "Explore palingenesia in Titus 3:5.",
       commentaryReferences: "Towner, The Letters to Timothy and Titus.",
       prayerNotes: "Pray against spiritual exhaustion.",
+      audio: {
+        title: "",
+        url: "",
+        recordedAt: "",
+        notes: ""
+      },
       outputNotes: {
         handout: "Include Titus 3:5 and a short reflection prompt.",
         slides: "Mercy as root, renewal as fruit.",
@@ -242,6 +254,12 @@ export const sampleData = {
       researchNotes: "Study Decapolis response in Mark 7.",
       commentaryReferences: "France, The Gospel of Mark.",
       prayerNotes: "Pray for evangelistic courage without pressure.",
+      audio: {
+        title: "",
+        url: "",
+        recordedAt: "",
+        notes: ""
+      },
       outputNotes: {
         handout: "Add a three-minute testimony template.",
         slides: "Use a map/home imagery sequence: rescued, returned, sent.",

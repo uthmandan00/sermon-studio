@@ -36,6 +36,15 @@ export function escapeHtml(value = "") {
     .replaceAll("'", "&#039;");
 }
 
+export function safeExternalUrl(value = "") {
+  try {
+    const url = new URL(String(value).trim(), window.location.origin);
+    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+  } catch {
+    return "";
+  }
+}
+
 export function normalizeList(value) {
   if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
   return String(value || "")

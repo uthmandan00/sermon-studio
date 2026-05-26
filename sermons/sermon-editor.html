@@ -161,6 +161,16 @@
                 <label class="field"><span>Prayer Notes</span><textarea class="textarea" id="prayerNotes"></textarea></label>
               </div>
             </details>
+            <details class="card editor-section" id="audio" data-mode="notes">
+              <summary>Sermon Audio</summary>
+              <div class="section-body form-grid">
+                <label class="field"><span>Recording Title</span><input class="input" id="audioTitle" placeholder="Sunday morning message"></label>
+                <label class="field"><span>Recorded Date</span><input class="input" id="audioRecordedAt" type="date"></label>
+                <label class="field full"><span>Audio URL</span><input class="input" id="audioUrl" type="url" placeholder="https://.../sermon-audio.mp3"></label>
+                <label class="field full"><span>Audio Notes</span><textarea class="textarea" id="audioNotes" placeholder="Where this audio is hosted, service notes, edits needed, or publication details."></textarea></label>
+                <p class="muted full">Use a hosted MP3, podcast, or storage link. Large audio files should not be stored directly in the browser.</p>
+              </div>
+            </details>
             <details class="card editor-section" id="organization" data-mode="review">
               <summary>Organization</summary>
               <div class="section-body form-grid">

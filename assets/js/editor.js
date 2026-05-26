@@ -1,5 +1,5 @@
 import { getSermon, loadData, upsertSermon } from "./storage.js";
-import { $, $$, calculateSermonMetrics, createId, escapeHtml, listToString, normalizeList, nowIso, prepProgress, readinessReview, sermonPlainText, toast } from "./utils.js";
+import { $, $$, calculateSermonMetrics, createId, escapeHtml, listToString, normalizeList, nowIso, prepProgress, readinessReview, safeExternalUrl, sermonPlainText, toast } from "./utils.js";
 
 const outlineTypes = ["Main Point", "Subpoint", "Illustration", "Application", "Scripture Block", "Quote", "Transition", "Prayer", "Discussion Question"];
 let currentSermon = null;
@@ -63,6 +63,12 @@ function blankSermon() {
     researchNotes: "",
     commentaryReferences: "",
     prayerNotes: "",
+    audio: {
+      title: "",
+      url: "",
+      recordedAt: "",
+      notes: ""
+    },
     outputNotes: {
       handout: "",
       slides: "",
@@ -113,6 +119,10 @@ function fillForm(sermon) {
   setValue("outputHandout", sermon.outputNotes?.handout || "");
   setValue("outputSlides", sermon.outputNotes?.slides || "");
   setValue("outputDiscussion", sermon.outputNotes?.discussion || "");
+  setValue("audioTitle", sermon.audio?.title || "");
+  setValue("audioUrl", sermon.audio?.url || "");
+  setValue("audioRecordedAt", sermon.audio?.recordedAt || "");
+  setValue("audioNotes", sermon.audio?.notes || "");
   setPrepValues(sermon.prepChecklist || {});
   renderOutline(sermon.outline || []);
   renderScriptureBlocks(sermon.scriptureBlocks || []);
@@ -148,6 +158,12 @@ function readForm() {
     researchNotes: getValue("researchNotes").trim(),
     commentaryReferences: getValue("commentaryReferences").trim(),
     prayerNotes: getValue("prayerNotes").trim(),
+    audio: {
+      title: getValue("audioTitle").trim(),
+      url: getValue("audioUrl").trim(),
+      recordedAt: getValue("audioRecordedAt"),
+      notes: getValue("audioNotes").trim()
+    },
     outputNotes: {
       handout: getValue("outputHandout").trim(),
       slides: getValue("outputSlides").trim(),
@@ -476,6 +492,20 @@ function outputHtml(sermon, type) {
   }).join("");
 }
 
+function audioHtml(audio = {}) {
+  const audioUrl = safeExternalUrl(audio.url);
+  if (!audioUrl) return "";
+  return `
+    <section class="card panel audio-player-card no-print">
+      <p class="eyebrow">Sermon Audio</p>
+      <h2>${escapeHtml(audio.title || "Sermon Recording")}</h2>
+      ${audio.recordedAt ? `<p class="muted">Recorded ${escapeHtml(audio.recordedAt)}</p>` : ""}
+      <audio controls preload="metadata" src="${escapeHtml(audioUrl)}"></audio>
+      ${audio.notes ? `<p>${escapeHtml(audio.notes)}</p>` : ""}
+    </section>
+  `;
+}
+
 function manuscriptHtml(text = "") {
   return text.split(/\n+/).map((line) => {
     const trimmed = line.trim();
@@ -660,6 +690,7 @@ function renderPreachingView(sermon) {
           <h2>Conclusion</h2><p>${escapeHtml(sermon.conclusion || "")}</p>
           <h2>Invitation / Response</h2><p>${escapeHtml(sermon.invitation || "")}</p>
         `}
+        ${audioHtml(sermon.audio)}
       </article>
     </main>
   `;
@@ -699,6 +730,7 @@ function renderReadOnly(sermon) {
       <div class="meta-row"><span class="status status-${sermon.status.toLowerCase()}">${escapeHtml(sermon.status)}</span><span>${metrics.words} words</span><span>${metrics.speakingMinutes} min</span></div>
       <div class="button-row no-print"><a class="btn" href="sermon-editor.html?id=${sermon.id}">Edit</a><a class="btn btn-primary" href="sermon-view.html?id=${sermon.id}&mode=preach">Preaching View</a><button class="btn" id="print-readonly" type="button">Print Sermon</button></div>
     </section>
+    ${audioHtml(sermon.audio)}
     <article class="card panel manuscript">
       ${sermon.manuscriptDraft ? manuscriptHtml(sermon.manuscriptDraft) : `
         <h2>Scripture</h2><p>${escapeHtml(sermon.mainScripture || "")}</p>

@@ -264,6 +264,20 @@
   background: white;
 }
 
+.audio-player-card {
+  display: grid;
+  gap: 10px;
+}
+
+.audio-player-card h2,
+.audio-player-card p {
+  margin: 0;
+}
+
+.audio-player-card audio {
+  width: 100%;
+}
+
 [data-theme="dark"] .output-preview {
   background: var(--surface-2);
 }

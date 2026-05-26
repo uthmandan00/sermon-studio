@@ -73,6 +73,20 @@ export function loadData() {
       data.meta.version = 6;
       saveData(data);
     }
+    if ((data.meta.version || 1) < 7) {
+      data.sermons = data.sermons.map((sermon) => ({
+        ...sermon,
+        audio: {
+          title: "",
+          url: "",
+          recordedAt: "",
+          notes: "",
+          ...(sermon.audio || {})
+        }
+      }));
+      data.meta.version = 7;
+      saveData(data);
+    }
     return data;
   } catch (error) {
     console.error("Unable to load sermon data.", error);

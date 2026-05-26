@@ -1,6 +1,6 @@
 import { deleteData, duplicateSermon, loadData, upsertSermon } from "./storage.js";
 import { filterSermons, getSearchState, renderFilterOptions, renderRecentSearches, renderSearchSummary, saveRecentSearch } from "./search.js";
-import { $, $$, calculateSermonMetrics, confirmAction, createId, escapeHtml, formatDate, formatDateTime, normalizeList, nowIso, prepProgress, readinessReview, toast } from "./utils.js";
+import { $, $$, calculateSermonMetrics, confirmAction, createId, escapeHtml, formatDate, formatDateTime, normalizeList, nowIso, prepProgress, readinessReview, safeExternalUrl, toast } from "./utils.js";
 
 let selectedSermonId = "";
 const VIEW_KEY = "sermon-library-view";
@@ -28,6 +28,7 @@ function renderDetailPane(data, sermon) {
   const metrics = calculateSermonMetrics(sermon);
   const progress = prepProgress(sermon);
   const review = readinessReview(sermon);
+  const audioUrl = safeExternalUrl(sermon.audio?.url);
   target.innerHTML = `
     <p class="eyebrow">Sermon Details</p>
     <h2>${escapeHtml(sermon.title)}</h2>
@@ -44,6 +45,7 @@ function renderDetailPane(data, sermon) {
       <div><dt>Passage</dt><dd>${escapeHtml(sermon.mainScripture || "Not assigned")}</dd></div>
       <div><dt>Series</dt><dd>${escapeHtml(seriesTitle(data, sermon.seriesId))}</dd></div>
       <div><dt>Speaker</dt><dd>${escapeHtml(sermon.speaker || "Not assigned")}</dd></div>
+      <div><dt>Audio</dt><dd>${audioUrl ? `<a href="${escapeHtml(audioUrl)}" target="_blank" rel="noreferrer">Recording linked</a>` : "No recording linked"}</dd></div>
       <div><dt>Last Edited</dt><dd>${formatDateTime(sermon.updatedAt)}</dd></div>
     </dl>
     <div class="tag-row">${(sermon.tags || []).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>
@@ -109,7 +111,7 @@ function renderWorkflowBoard(data, sermons) {
                 <span>${escapeHtml(sermon.mainScripture || "No scripture")} - ${escapeHtml(seriesTitle(data, sermon.seriesId))}</span>
                 <div class="workflow-meta">
                   <small>${formatDate(sermon.datePreached)}</small>
-                  <small>${metrics.speakingMinutes} min</small>
+                  <small>${sermon.audio?.url ? "Audio" : `${metrics.speakingMinutes} min`}</small>
                 </div>
                 <div class="prep-progress" aria-label="${progress}% preparation complete"><span style="width:${progress}%"></span></div>
                 <div class="workflow-actions">
@@ -200,6 +202,12 @@ function parseImportedSermon(text, fileName = "Imported sermon") {
     researchNotes: "",
     commentaryReferences: "",
     prayerNotes: "",
+    audio: {
+      title: "",
+      url: "",
+      recordedAt: "",
+      notes: ""
+    },
     outputNotes: { handout: "", slides: "", discussion: "" },
     prepChecklist: {
       manuscript: Boolean(text.trim()),
