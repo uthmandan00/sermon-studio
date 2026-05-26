@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: sermon-studio
+    env: node
+    plan: free
+    buildCommand: ""
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: NODE_ENV
+        value: production

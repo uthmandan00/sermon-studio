@@ -53,6 +53,39 @@ Health check endpoint:
 
 If you deploy this as static files only, the app will still open, but Word document import will not work because `/api/import-docx` requires `server.mjs`.
 
+### Option 1: Render
+
+This repo includes `render.yaml`. Create a new Render Blueprint from the repo, then Render will use:
+
+```text
+startCommand: npm start
+healthCheckPath: /health
+HOST=0.0.0.0
+```
+
+### Option 2: Docker
+
+Build and run the container:
+
+```powershell
+docker build -t sermon-studio .
+docker run --rm -p 4173:4173 sermon-studio
+```
+
+Then open:
+
+```text
+http://127.0.0.1:4173/
+```
+
+### Environment Variables
+
+See `.env.example` for local defaults.
+
+- `HOST`: use `127.0.0.1` locally and `0.0.0.0` on a host.
+- `PORT`: defaults to `4173`.
+- `MAX_UPLOAD_BYTES`: defaults to 25 MB for Word document imports.
+
 ## Current Go-Live Caveats
 
 - There is no user login yet.
