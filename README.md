@@ -38,9 +38,15 @@ Setup:
 2. Open the Supabase SQL Editor.
 3. Run `supabase-schema.sql`.
 4. In Sermon Studio, open **Settings -> Cloud Sync**.
-5. Paste the Supabase project URL and anon/publishable key.
+5. Confirm the Supabase project URL and publishable key.
 6. Create an account or sign in.
 7. Click **Push Local to Cloud**.
+
+The dedicated hosted project currently configured in the app is:
+
+```text
+https://bedwhndeacgzzhtcxjcl.supabase.co
+```
 
 The app stores one private `sermon_workspaces` row per authenticated user. Row Level Security is enabled so users can only read and write their own workspace.
 

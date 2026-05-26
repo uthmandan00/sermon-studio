@@ -3,14 +3,19 @@ import { nowIso } from "./utils.js";
 const CLOUD_CONFIG_KEY = "sermon-manager-cloud-config-v1";
 const CLOUD_STATUS_KEY = "sermon-manager-cloud-status-v1";
 const SUPABASE_CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+const DEFAULT_CLOUD_CONFIG = {
+  url: "https://bedwhndeacgzzhtcxjcl.supabase.co",
+  anonKey: "sb_publishable_pUYDwPVIflUgdsSqftzgKw_mbu1Gjue",
+  enabled: false
+};
 let clientPromise = null;
 let syncTimer = null;
 
 export function getCloudConfig() {
   try {
-    return JSON.parse(localStorage.getItem(CLOUD_CONFIG_KEY) || "{}");
+    return { ...DEFAULT_CLOUD_CONFIG, ...JSON.parse(localStorage.getItem(CLOUD_CONFIG_KEY) || "{}") };
   } catch {
-    return {};
+    return { ...DEFAULT_CLOUD_CONFIG };
   }
 }
 
